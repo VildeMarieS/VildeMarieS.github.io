@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Backdoor — Marie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">marie<span class="accent">.</span></a>
+      <nav>
+        <a href="../index.html#projects">Projects</a>
+        <a href="mailto:vildenia202@gmail.com">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <article>
+
+    <div class="project-hero">
+      <a href="../index.html" class="back-link">← All projects</a>
+      <span class="card-tag">Cybersecurity</span>
+      <h1>Network Traffic Analysis using Wireshark</h1>
+      <p class="lead">
+        In this first exercise I am given a pcap file and a txt file containing TLS keys. The objective is to use these keys to decrypt
+         the network traffic and analyze the communication of a particular system. My goal is to identify signs of infection and find out 
+         what happened. Using Wireshark, this is essentially the kind of task you would encounter working on a blue team.
+      </p>
+    </div>
+
+    <div class="project-body">
+
+      <div class="meta-row">
+        <div class="meta-item">
+          <span class="label">Type</span>
+          <span class="value">Lab / Cybersecurity</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Tool</span>
+          <span class="value">Wireshark</span>
+          <span class="value">VirusTotal</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Course</span>
+          <span class="value">Hackersploit Linux Security | Blue Team Series</span>
+          <span class="value">Episode 1: Network Traffic Analysis with Wireshark</span>
+          <a href="https://www.youtube.com/watch?v=rS7SPH_2iWc&list=PLTnRtjQN5ieZuL1qgfAQxEIg1Bw4hS8wM" target="_blank">
+            YouTube</a>
+        </div>
+      </div>
+
+      <h2>Method</h2>
+      <p>
+        I opened the pcap file in Wireshark. To be able to read the traffic I first had to import 
+        the TLS keys under Preferences → Protocols → TLS, since all the communication would otherwise 
+        just show up as encrypted data. I knew this from the video, but it’s worth noting that this 
+        only works if you have access to private keys or a pre-master secret log - which you rarely 
+        have in a real-world scenario.
+      </p>
+
+      <img src="../assets/images/Network_Traffic/Traffic_before_decrypt.png"
+            alt="Traffic before decryption"
+            class="project-image">
+
+        <img src="../assets/images/Network_Traffic/Traffic_after_decrypt.png"
+            alt="Traffic after decryption"
+            class="project-image">
+
+      <p>
+        Now we are ready to analyze the traffic to look for anything suspicious. With the TLS keys loaded, 
+        my first goal was to get a high-level overview of the network activity. Rather than looking at raw 
+        traffic immediately, I wanted to focus on initiated connections and HTTP requests, as these are the 
+        most likely places to spot suspicious behaviour. The filter used in this analysis was introduced in 
+        the video course as a solid starting point. After looking at each component, it makes sense why — it 
+        is designed to focus on the most relevant traffic for malware analysis, HTTP requests and TLS connections, 
+        while removing background noise that would only clutter the view. We therefore set the display filter to 
+        <strong>(http.request or tls.handshake.type eq 1) and !(ssdp)</strong>.
+      </p>
+
+      <p>
+        <strong>http.request</strong> displays all HTTP requests sent across the network, including GET, POST, and others. This 
+        is useful because malicious actors often use HTTP requests to exfiltrate data from a machine or to 
+        communicate with a command-and-control server, often without the user knowing.
+      </p>
+
+      <p>
+        <strong>tls.handshake.type eq 1</strong> filters for TLS Client Hello messages, which gives us a quick 
+        overview of every TLS connection that was initiated — essentially a list of all the domains and servers 
+        the machine tried to connect to. This is useful for spotting suspicious domains, seeing how many connections 
+        were made and where, and establishing a timeline of network activity. For reference, type 2 would show Server 
+        Hellos, and type 11 would show certificates.
+      </p>
+
+      <p>
+        Finally, <strong>!(ssdp)</strong> filters out background noise. Pcap files often contain a lot of routine 
+        traffic that isn't relevant to the investigation, and SSDP is one of the most common examples. Removing 
+        it makes it easier to focus on potentially suspicious connections.
+      </p>
+
+
+      
+
+
+
+
+
+      <div class="tag-row">
+        <span class="tag">Wireshark</span>
+        <span class="tag">VirusTotal</span>
+        <span class="tag">Network Analysis</span>
+        <span class="tag">Blue Team</span>
+        <span class="tag">Kali Linux</span>
+        <span class="tag">VirtualBox</span>
+      </div>
+
+    </div>
+
+  </article>
+
+  <footer class="site-footer">
+    <p>Vilde-Marie · Built with GitHub Pages</p>
+    <div class="footer-links">
+      <a href="https://github.com/VildeMarieS" target="_blank">GitHub</a>
+      <a href="mailto:vildenia202@gmail.com">Email</a>
+    </div>
+  </footer>
+
+</body>
