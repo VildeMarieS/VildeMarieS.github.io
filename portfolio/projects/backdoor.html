@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Backdoor — Marie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">marie<span class="accent">.</span></a>
+      <nav>
+        <a href="../index.html#projects">Projects</a>
+        <a href="mailto:you@example.com">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <article>
+
+    <div class="project-hero">
+      <a href="../index.html" class="back-link">← All projects</a>
+      <span class="card-tag">Cybersecurity</span>
+      <h1>Python Backdoor</h1>
+      <p class="lead">
+        A custom client/server backdoor written in Python using raw socket programming —
+        built as part of a hands-on ethical hacking lab inside a controlled virtual machine environment.
+      </p>
+    </div>
+
+    <div class="project-body">
+
+      <div class="meta-row">
+        <div class="meta-item">
+          <span class="label">Type</span>
+          <span class="value">Lab / Cybersecurity</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Language</span>
+          <span class="value">Python</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Environment</span>
+          <span class="value">Kali Linux + Windows VM</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Course</span>
+          <span class="value">Zero to Mastery – Cybersecurity</span>
+        </div>
+      </div>
+
+      <!-- Replace this with a real screenshot when you have one -->
+      <div class="image-placeholder">screenshot / demo GIF goes here</div>
+
+      <h2>What it does</h2>
+      <p>
+        The backdoor consists of two Python scripts: a server running on a Kali Linux attacker
+        machine and a client planted on a Windows target VM. Once a connection is established,
+        the server can send shell commands and receive the output in real time.
+      </p>
+
+      <h2>How it was built</h2>
+      <ul>
+        <li>Used Python's <code>socket</code> module to set up a raw TCP connection between the two VMs.</li>
+        <li>Configured both machines on a VirtualBox internal network with static IPs.</li>
+        <li>Implemented a persistent connection loop so the backdoor reconnects if dropped.</li>
+        <li>Bypassed Windows Defender interference during testing by adjusting exclusion paths.</li>
+      </ul>
+
+      <h2>What I learned</h2>
+      <p>
+        This lab gave me hands-on experience with low-level networking concepts — how sockets work,
+        how commands travel over a connection, and how defenders detect this kind of traffic.
+        Debugging the VM networking (internal vs. NAT adapters, static IPs via <code>/etc/network/interfaces</code>)
+        was a challenge in itself and taught me a lot about Linux network configuration.
+      </p>
+
+      <div class="tag-row">
+        <span class="tag">Python</span>
+        <span class="tag">Sockets</span>
+        <span class="tag">Kali Linux</span>
+        <span class="tag">VirtualBox</span>
+        <span class="tag">Ethical hacking</span>
+        <span class="tag">Networking</span>
+      </div>
+
+    </div>
+
+  </article>
+
+  <footer class="site-footer">
+    <p>Marie · Built with GitHub Pages</p>
+    <div class="footer-links">
+      <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+      <a href="mailto:you@example.com">Email</a>
+    </div>
+  </footer>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Backdoor — Marie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">marie<span class="accent">.</span></a>
+      <nav>
+        <a href="../index.html#projects">Projects</a>
+        <a href="mailto:you@example.com">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <article>
+
+    <div class="project-hero">
+      <a href="../index.html" class="back-link">← All projects</a>
+      <span class="card-tag">Cybersecurity</span>
+      <h1>Python Backdoor</h1>
+      <p class="lead">
+        A custom client/server backdoor written in Python using raw socket programming —
+        built as part of a hands-on ethical hacking lab inside a controlled virtual machine environment.
+      </p>
+    </div>
+
+    <div class="project-body">
+
+      <div class="meta-row">
+        <div class="meta-item">
+          <span class="label">Type</span>
+          <span class="value">Lab / Cybersecurity</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Language</span>
+          <span class="value">Python</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Environment</span>
+          <span class="value">Kali Linux + Windows VM</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Course</span>
+          <span class="value">Zero to Mastery – Cybersecurity</span>
+        </div>
+      </div>
+
+      <!-- Replace this with a real screenshot when you have one -->
+      <div class="image-placeholder">screenshot / demo GIF goes here</div>
+
+      <h2>What it does</h2>
+      <p>
+        The backdoor consists of two Python scripts: a server running on a Kali Linux attacker
+        machine and a client planted on a Windows target VM. Once a connection is established,
+        the server can send shell commands and receive the output in real time.
+      </p>
+
+      <h2>How it was built</h2>
+      <ul>
+        <li>Used Python's <code>socket</code> module to set up a raw TCP connection between the two VMs.</li>
+        <li>Configured both machines on a VirtualBox internal network with static IPs.</li>
+        <li>Implemented a persistent connection loop so the backdoor reconnects if dropped.</li>
+        <li>Bypassed Windows Defender interference during testing by adjusting exclusion paths.</li>
+      </ul>
+
+      <h2>What I learned</h2>
+      <p>
+        This lab gave me hands-on experience with low-level networking concepts — how sockets work,
+        how commands travel over a connection, and how defenders detect this kind of traffic.
+        Debugging the VM networking (internal vs. NAT adapters, static IPs via <code>/etc/network/interfaces</code>)
+        was a challenge in itself and taught me a lot about Linux network configuration.
+      </p>
+
+      <div class="tag-row">
+        <span class="tag">Python</span>
+        <span class="tag">Sockets</span>
+        <span class="tag">Kali Linux</span>
+        <span class="tag">VirtualBox</span>
+        <span class="tag">Ethical hacking</span>
+        <span class="tag">Networking</span>
+      </div>
+
+    </div>
+
+  </article>
+
+  <footer class="site-footer">
+    <p>Marie · Built with GitHub Pages</p>
+    <div class="footer-links">
+      <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+      <a href="mailto:you@example.com">Email</a>
+    </div>
+  </footer>
+
+</body>
+</html>
