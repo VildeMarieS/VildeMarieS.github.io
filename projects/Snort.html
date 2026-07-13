@@ -83,7 +83,7 @@
 
       <img src="../assets/images/Snort/topology.png"
             alt="Planned network diagram: switch, internal monitored network, external attacker segment"
-            class="project-image">
+            class="screenshot">
 
 
       <h2>Setting Up Snort</h2>
@@ -101,7 +101,7 @@
 
       <img src="../assets/images/Snort/backup.png"
             alt="Backing up snort.conf before editing"
-            class="project-image">
+            class="screenshot">
 
       <p>
         The first thing I edited was the <strong>HOME_NET</strong> variable, which defines the subnet Snort should treat as "home" and monitor. 
@@ -109,13 +109,13 @@
       </p>
 
       <div class="side-by-side">
-        <img src="../assets/images/Snort/HOMENET_before.png" alt="Before">
-        <img src="../assets/images/Snort/HOMENET_after.png" alt="After">
+        <img src="../assets/images/Snort/HOMENET_before.png" alt="Before" class="screenshot">
+        <img src="../assets/images/Snort/HOMENET_after.png" alt="After" class="screenshot">
         </div>
 
       <img src="../assets/images/Snort/custom_rule.png"
             alt="Custom rule for detecting pings in the network"
-            class="project-image">
+            class="screenshot">
 
       <p>
         (Small side note: this lab was also my first real hands-on use of vim — editing, quitting, line numbers, and modifying larger blocks of text.)
@@ -196,7 +196,7 @@
 
     <img src="../assets/images/Snort/ssh_custom_rule.png"
             alt="Custom SSH detection rule"
-            class="project-image">
+            class="screenshot">
 
     <p>
         Snort correctly alerted on SSH authentication activity in the lab:
@@ -204,13 +204,13 @@
 
     <img src="../assets/images/Snort/ssh_rule_result.png"
             alt="Resulting alerts"
-            class="project-image">
+            class="screenshot">
 
     <p>A useful tool for building rules more visually: <a href="https://www.cyb3rs3c.net/" target="_blank">
             Snorpy</a></p>
     
     <h2>Using Community Rules</h2>
-    
+
 
 
 
