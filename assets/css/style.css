@@ -4,9 +4,11 @@
   --bg-card:   #13161d;
   --border:    #1e2230;
   --text:      #e8eaf0;
-  --muted:     #6b7280;
-  --accent:    #7c6aff;   /* violet — signature colour */
-  --accent-dim:#2e2854;
+  --muted:     #9aa1ad;   /* lighter — fixes the low-contrast body text */
+  --accent:    #4c8c5f;   /* leafy dark green — new primary */
+  --accent-dim:#1e3a28;   /* deep green tint, for boxes/backgrounds */
+  --accent-2:     #7c6aff; /* violet — now secondary accent */
+  --accent-2-dim: #2e2854;
   --mono:      'Space Mono', monospace;
   --sans:      'Space Grotesk', sans-serif;
 }
