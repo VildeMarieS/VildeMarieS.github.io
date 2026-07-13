@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
+  <canvas id="matrix"></canvas>
 
   <header class="site-header">
     <div class="header-inner">
@@ -86,5 +87,63 @@
     </div>
   </footer>
 
+<script>
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+resize();
+window.addEventListener("resize", resize);
+
+const fontSize = 14;
+const columns = Math.floor(canvas.width / fontSize);
+
+const drops = [];
+
+for (let i = 0; i < columns; i++) {
+    drops[i] = Math.random() * -100;
+}
+
+const chars = "01";
+
+function draw() {
+
+    ctx.fillStyle = "rgba(13,17,23,0.08)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = `${fontSize}px Space Mono`;
+    ctx.fillStyle = "#3fb950";
+
+    for (let i = 0; i < columns; i++) {
+
+        // ONLY draw near the edges
+        if (i > 6 && i < columns - 6)
+            continue;
+
+        const text = chars[Math.floor(Math.random() * chars.length)];
+
+        ctx.globalAlpha = 0.15;
+
+        ctx.fillText(
+            text,
+            i * fontSize,
+            drops[i] * fontSize
+        );
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+            drops[i] = 0;
+
+        drops[i]++;
+    }
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
 </body>
 </html>
