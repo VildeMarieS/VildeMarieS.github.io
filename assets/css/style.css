@@ -388,3 +388,20 @@ nav a:hover { color: var(--text); }
   border: 1px solid var(--border);
   margin: 1.5rem 0;
 }
+
+.vine-divider {
+  position: relative;
+  margin: 2rem 0;
+}
+
+.vine-flower {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  transform: scale(0);
+  transform-origin: center;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.vine-divider.in-view .vine-flower:nth-of-type(1) { transform: scale(1); }
+.vine-divider.in-view .vine-flower:nth-of-type(2) { transform: scale(1); transition-delay: 0.15s; }
