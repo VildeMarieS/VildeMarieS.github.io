@@ -10,14 +10,7 @@
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 
-<script>
-    document.querySelectorAll('.vine-divider').forEach(div => {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) div.classList.add('in-view'); });
-      }, { threshold: 0.4 });
-      observer.observe(div);
-    });
-  </script>
+
 
 <body>
 
@@ -258,5 +251,15 @@
       <a href="mailto:vildenia202@gmail.com">Email</a>
     </div>
   </footer>
+
+  <script>
+    document.querySelectorAll('.vine-divider').forEach(div => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) div.classList.add('in-view'); });
+      }, { threshold: 0.4 });
+      observer.observe(div);
+    });
+  </script>
+
 
 </body>
