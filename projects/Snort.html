@@ -66,7 +66,8 @@
         just installing Snort — to actually understand *where* a sensor needs to sit in a network to see what 
         it's supposed to see, and to practice both writing custom rules and applying community-maintained ones
          against real (if deliberately vulnerable) exploit traffic.
-
+        </p>
+        <p>
         This is the first lab I've built with three VMs — I'd previously only worked with two-VM setups, so 
         getting inter-VM routing right was new territory.
       </p>
@@ -93,7 +94,8 @@
          write your own rules, typically saved to a <strong>local</strong> file. In this lab, I disabled the predetermined ruleset 
          to practice writing my own rules from scratch, before later reintroducing rules from Snort's official 
          community set.
-
+        </p>
+        <p>
         <strong>snort.conf</strong> is the main configuration file and effectively the core of how Snort behaves. As a beginner, 
         I made a backup copy before editing anything — good practice for any config file you're not yet fully 
         comfortable with.
@@ -134,11 +136,13 @@
       <p>
         This turned out to be a network topology issue, not a Snort configuration problem. My first attempt put all three VMs on a single flat VirtualBox Internal Network. I'd assumed 
         promiscuous mode would let Snort passively see *all* traffic on that segment, including traffic between Kali and Metasploitable2 that wasn't addressed to it.
-
+      </p>
+      <p>
         That assumption was wrong. VirtualBox's Internal Network behaves like a real switch: it only delivers traffic to the port it's actually addressed to, rather than broadcasting everything 
         to every connected interface. So even with promiscuous mode on, Snort's interface simply never received a copy of traffic travelling directly between two *other* machines on the same 
         flat segment — there was nothing arriving at its NIC to inspect in the first place.
-
+      </p>
+      <p>
         This also matched my original network diagram more closely than I'd initially realized: it places Snort *between* the switch and the vulnerable server — an inline position, 
         where traffic to the target has to physically pass through the Snort host, not just sit passively nearby on the same switch.
       </p>
@@ -146,6 +150,7 @@
       <h3>Fix: redesigning as a two-segment bridge</h3>
       <p>
         To force Kali-Metasploitable2 traffic to actually pass through the Snort sensor, I restructured the network into two separate segments, with Ubuntu acting as a bridge/router between them:
+      </p>
         <ul>
             <li><strong>192.168.10.0/24</strong> - Kali-facing segment (Ubuntu's first interface, <strong>enp0s3</strong>)</li>
             <li><strong>192.168.2.0/24</strong> - Metasploitable2-facing segment (Ubuntu's second interface, <strong>enp0s8</strong>)</li>
@@ -161,6 +166,7 @@
                  so cross-subnet traffic would route through Ubuntu</li>
         </ul>
 
+      <p>
         With this topology, a ping from Kali to Metasploitable2 now has to traverse both of Ubuntu's interfaces to reach its destination — exactly the path Snort needed to observe. After this change, 
         Snort successfully detected ICMP traffic between Kali and Metasploitable2.
       </p>
