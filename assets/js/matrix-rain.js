@@ -22,7 +22,7 @@
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
     columns = Math.floor(width / fontSize);
-    drops = new Array(columns).fill(1);
+    drops = new Array(columns).fill(0).map(() => Math.random() * -height / fontSize);
   }
   resize();
   window.addEventListener('resize', resize);
