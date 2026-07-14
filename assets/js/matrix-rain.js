@@ -15,8 +15,8 @@
   let width, height, columns, drops;
 
   const fontSize = 16;
-  const borderWidth = 120; // how wide the "rain zone" is on each side, in px
-  const chars = 'アイウエオカキクケコサシスセソタチツテト0123456789ABCDEF';
+  const borderWidth = 220; // how wide the "rain zone" is on each side, in px
+  const chars = ["0","1","0","1","0","1","<",">","/"];
 
   function resize() {
     width = canvas.width = window.innerWidth;
@@ -51,5 +51,5 @@
     }
   }
 
-  setInterval(draw, 50);
+  setInterval(draw, 80);
 })();
