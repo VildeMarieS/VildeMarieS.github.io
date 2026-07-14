@@ -472,3 +472,30 @@ tr:last-child th,
 tr:last-child td {
   border-bottom: none;
 }
+
+code {
+    font-family: 'Space Mono', monospace;
+    background: var(--code-bg);
+    color: var(--accent);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+ 
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 1.1rem 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+  }
+ 
+  pre code {
+    background: none;
+    color: #d7d7cf;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }

