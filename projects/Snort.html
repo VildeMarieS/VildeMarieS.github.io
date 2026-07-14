@@ -89,16 +89,6 @@
             class="screenshot">
 
 
-      <div class="vine-divider">
-        <svg width="100%" height="24" viewBox="0 0 300 24" fill="none" stroke="var(--accent)" stroke-width="1.5" preserveAspectRatio="none">
-          <path d="M0 12 Q37 4 75 12 T150 12 T225 12 T300 12"/>
-        </svg>
-        <img src="../assets/images/flower.png" class="vine-flower" style="left: 16%; top: -4px;" alt="">
-        <img src="../assets/images/flower.png" class="vine-flower" style="left: 70%; top: 6px;" alt="">
-        <img src="../assets/images/flower.png" class="vine-flower" style="left: 50%; top: 3px;" alt="">
-        <img src="../assets/images/flower.png" class="vine-flower" style="left: 23%; top: -2px;" alt="">
-        <img src="../assets/images/flower.png" class="vine-flower" style="left: 61%; top: 0px;" alt="">
-      </div>
 
       <h2>Setting Up Snort</h2>
       <p>
@@ -255,14 +245,6 @@
     </div>
   </footer>
 
-  <script>
-    document.querySelectorAll('.vine-divider').forEach(div => {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) div.classList.add('in-view'); });
-      }, { threshold: 0.4 });
-      observer.observe(div);
-    });
-  </script>
-
-
+    <script src="../assets/js/matrix-rain.js" defer></script>
+ 
 </body>
