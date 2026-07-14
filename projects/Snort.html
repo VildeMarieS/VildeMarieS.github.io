@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      <h2>Objective</h2>
+      <h1>Objective</h1>
       <p>
         Build a small virtualized lab to practice configuring a Snort IDS sensor that monitors traffic between
         an attacker machine (Kali Linux) and a vulnerable target (Metasploitable2). The goal was to go beyond 
@@ -74,7 +74,7 @@
         getting inter-VM routing right was new territory.
       </p>
 
-      <h2>Environment</h2>
+      <h1>Environment</h1>
       <p>
         Three VirtualBox VMs:
         <ul>
@@ -197,7 +197,7 @@
         </p>
     </blockquote>
 
-    <h2>Writing a Custom Rule</h2>
+    <h1>Writing a Custom Rule</h1>
         <p>
             With the topology fixed, I wrote a rule to alert on any established SSH connection: any TCP traffic from an outside IP/port into <strong>HOME_NET</strong> on port 22. Rule SIDs must be unique,
             so this one was set to 100002.
@@ -218,7 +218,7 @@
         <p>A useful tool for building rules more visually: <a href="https://www.cyb3rs3c.net/" target="_blank">
                 Snorpy</a></p>
     
-    <h2>Using Community Rules</h2>
+    <h1>Using Community Rules</h1>
         <p>Snort's official community ruleset is written and maintained collectively, and is considerably more complex 
             and extensive than anything I'd write myself. It's kept current with newly discovered and documented attacks
             — meaning using it saves a lot of time versus writing detection logic from scratch, and helps keep a system 
@@ -287,7 +287,7 @@
                 about whether the attacker's exploit fully succeeds end-to-end.
             </p>
 
-    <h2>Overall Takeaways</h2>
+    <h1>Overall Takeaways</h2>
     <ul>
         <li>A sensor is only as good as its position in the network. Promiscuous mode, correct rules, and everything else is irrelevant if the traffic never 
             physically reaches the interface.</li>
