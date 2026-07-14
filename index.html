@@ -94,50 +94,70 @@ const ctx = canvas.getContext("2d");
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    columns = Math.floor(canvas.width / fontSize);
+    drops = [];
+
+    for (let i = 0; i < columns; i++) {
+        drops[i] = Math.floor(Math.random() * -100);
+    }
 }
+
+const fontSize = 16;
+let columns;
+let drops = [];
 
 resize();
 window.addEventListener("resize", resize);
-
-const fontSize = 14;
-const columns = Math.floor(canvas.width / fontSize);
-
-const drops = [];
-
-for (let i = 0; i < columns; i++) {
-    drops[i] = Math.random() * -100;
-}
 
 const chars = "01";
 
 function draw() {
 
-    ctx.fillStyle = "rgba(13,17,23,0.08)";
+    // Fade previous frame
+    ctx.fillStyle = "rgba(13,17,23,0.15)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = `${fontSize}px Space Mono`;
-    ctx.fillStyle = "#3fb950";
 
     for (let i = 0; i < columns; i++) {
 
-        // ONLY draw near the edges
-        if (i > 6 && i < columns - 6)
+        // Only draw the first and last ~80px
+        if (i > 5 && i < columns - 5)
             continue;
 
-        const text = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
 
-        ctx.globalAlpha = 0.15;
-
+        // Head character (bright)
+        ctx.fillStyle = "#8dff9d";
         ctx.fillText(
-            text,
-            i * fontSize,
-            drops[i] * fontSize
+            chars[Math.floor(Math.random() * 2)],
+            x,
+            y
         );
 
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975)
-            drops[i] = 0;
+        // Trail (dimmer)
+        ctx.fillStyle = "rgba(63,185,80,0.30)";
 
-        drops[i]++;
+        for (let t = 1; t <= 8; t++) {
+
+            ctx.fillText(
+                chars[Math.floor(Math.random() * 2)],
+                x,
+                y - t * fontSize
+            );
+        }
+
+        // Slow movement
+        if (Math.random() > 0.92) {
+            drops[i]++;
+        }
+
+        // Restart
+        if (y > canvas.height + Math.random() * 300) {
+            drops[i] = Math.floor(Math.random() * -40);
+        }
     }
 
     requestAnimationFrame(draw);
