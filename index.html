@@ -122,9 +122,13 @@ function draw() {
 
     for (let i = 0; i < columns; i++) {
 
-        // Only draw the first and last ~80px
-        if (i > 5 && i < columns - 5)
-            continue;
+        const borderColumns = 16;
+
+        if (
+          i > borderColumns &&
+          i < columns - borderColumns
+        )
+        continue;
 
         const x = i * fontSize;
         const y = drops[i] * fontSize;
@@ -150,9 +154,7 @@ function draw() {
         }
 
         // Slow movement
-        if (Math.random() > 0.92) {
-            drops[i]++;
-        }
+        drops[i] +=0.25;
 
         // Restart
         if (y > canvas.height + Math.random() * 300) {
