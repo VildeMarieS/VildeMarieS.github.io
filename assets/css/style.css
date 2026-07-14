@@ -424,3 +424,51 @@ nav a:hover { color: var(--text); }
   border: 2px solid #4c8c5f; /* optional violet ring to match your theme */
   flex-shrink: 0;
 }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.95rem;
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* header row */
+tr:first-child th {
+  background-color: rgba(46, 125, 50, 0.15); /* subtle green tint */
+  color: #6fcf97; /* your leafy green accent */
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #6fcf97;
+}
+
+/* row labels (the dll names) */
+tr:not(:first-child) th {
+  color: #e0e0e0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+td {
+  color: #b8b8b8;
+}
+
+/* zebra striping, optional */
+tr:nth-child(even):not(:first-child) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* remove border on last row */
+tr:last-child th,
+tr:last-child td {
+  border-bottom: none;
+}
