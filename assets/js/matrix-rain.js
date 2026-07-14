@@ -43,7 +43,7 @@
       const text = chars[Math.floor(Math.random() * chars.length)];
       const y = drops[i] * fontSize;
 
-      ctx.fillStyle = '#9d4edd'; // violet
+      ctx.fillStyle = '#4c8c5f'; // violet
       ctx.fillText(text, x, y);
 
       if (y > height && Math.random() > 0.975) drops[i] = 0;
