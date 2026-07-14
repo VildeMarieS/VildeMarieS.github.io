@@ -198,31 +198,107 @@
     </blockquote>
 
     <h2>Writing a Custom Rule</h2>
-    <p>
-        With the topology fixed, I wrote a rule to alert on any established SSH connection: any TCP traffic from an outside IP/port into <strong>HOME_NET</strong> on port 22. Rule SIDs must be unique,
-         so this one was set to 100002.
-    </p>
+        <p>
+            With the topology fixed, I wrote a rule to alert on any established SSH connection: any TCP traffic from an outside IP/port into <strong>HOME_NET</strong> on port 22. Rule SIDs must be unique,
+            so this one was set to 100002.
+        </p>
 
-    <img src="../assets/images/Snort/ssh_custom_rule.png"
-            alt="Custom SSH detection rule"
-            class="screenshot">
+        <img src="../assets/images/Snort/ssh_custom_rule.png"
+                alt="Custom SSH detection rule"
+                class="screenshot">
 
-    <p>
-        Snort correctly alerted on SSH authentication activity in the lab:
-    </p>
+        <p>
+            Snort correctly alerted on SSH authentication activity in the lab:
+        </p>
 
-    <img src="../assets/images/Snort/ssh_rule_result.png"
-            alt="Resulting alerts"
-            class="screenshot">
+        <img src="../assets/images/Snort/ssh_rule_result.png"
+                alt="Resulting alerts"
+                class="screenshot">
 
-    <p>A useful tool for building rules more visually: <a href="https://www.cyb3rs3c.net/" target="_blank">
-            Snorpy</a></p>
+        <p>A useful tool for building rules more visually: <a href="https://www.cyb3rs3c.net/" target="_blank">
+                Snorpy</a></p>
     
     <h2>Using Community Rules</h2>
+        <p>Snort's official community ruleset is written and maintained collectively, and is considerably more complex 
+            and extensive than anything I'd write myself. It's kept current with newly discovered and documented attacks
+            — meaning using it saves a lot of time versus writing detection logic from scratch, and helps keep a system 
+            reasonably current against known threats. (It's worth noting that this only covers known, documented vulnerabilities
+            — a system is still exposed to anything not yet discovered or published.) You can download and load the entire ruleset,
+            or select specific rules of interest and add them to your local rules file, which is the approach I took.</p>
+
+            <h3>Attempt 1: EternalBlue (MS17-010)</h3>
+            <p>I first tried implementing the community rule for the EternalBlue SMB vulnerability and attacking Metasploitable2 with it.</p>
+
+            <img src="../assets/images/Snort/EternalBluerule.png"
+                    alt="EternalBlue rule loaded into local rules"
+                    class="screenshot">
+            <p>
+                This didn't succeed as an exploit, and that tured out to be expected rather than a mistake. EternalBlue targets a vulnerability 
+                specific to Windows' SMBv1 implementation. Metasploitable2 is a Linux machine running Samba, which doesn't share that same vulnerable 
+                code path, so the target genuinely isn't exploitable this way. This was a good concrete lesson that exploits are OS/service-specific, 
+                not universal. Matching the right exploit to the right target is part of the process, not just running tools and seeing what happens.
+            </p>
+            <p>
+                Snort still logged the connection attempt, but since there was no real vulnerability to trigger, there was no full attack pattern to detect, 
+                only the initial probe.
+            </p>
+
+            <img src="../assets/images/Snort/EternalBlueLogZoom.png"
+                    alt="The attack failing because the OS lacks the vulnerability"
+                    class="screenshot">
 
 
+        <h3>Attempt 2: distcc Remote Command Execution</h3>
+            <p>
+                Wanting to actually see a community rule fire against a working exploit, I looked for a vulnerability that genuinely applies to Metasploitable2's
+                Linux/Samba environment. Metasploitable2 deliberately runs a vulnerable <strong>distccd</strong> service, and Snort's community ruleset includes a matching 
+                detection rule for it.
+            </p>
+            <p>
+                <strong>vulnerability: distcc</strong>, listening on port 3632, is designed to accept and execute compilation jobs from trusted build networks. Metasploitable2 
+                runs it with no access control, so anyone able to reach port 3632 can hand it an arbitrary command to execute instead of a legitimate compile job.
+            </p>
+            <p>
+                <strong>The rule:</strong> looks for string DIST00000001, which is distcc's protocol handshake token, within the first 12 bytes of a TCP session to port 3632.
+            </p>
 
+            <img src="../assets/images/Snort/distccdrule.png"
+                    alt="Community rule for distccd RCE, sid:3061"
+                    class="screenshot">
 
+            <p>
+                <strong>The attack:</strong> run from Kali via Metasploit's <strong>exploit/unix/misc/distcc_exec</strong> module against Metasploitable2.
+            </p>
+
+            <img src="../assets/images/Snort/distccdattack.png"
+                    alt="Running the distcc exploit from Kali"
+                    class="screenshot">
+
+            <img src="../assets/images/Snort/distccdlog.png"
+                    alt="Snort alert: [1:3061:6] APP-DETECT distccd remote command execution attempt"
+                    class="screenshot">
+
+            <p>
+                Snort successfully detected the exploit attempt, confirming the community rule works as intended against real, matching attack traffic. 
+                Notably, detection here didn't depend on getting a full interactive shell back — the error output on Metasploitable2's side (bash: /dev/tcp/... 
+                No such file or directory) suggests the command was actually handed to and executed by the target, even though the reverse shell callback itself 
+                failed (likely a routing issue specific to the two-segment bridge, since the callback needs to travel back across Ubuntu the opposite direction 
+                from the original attack). That's a useful distinction to keep in mind generally: detection is about the traffic pattern reaching the sensor, not 
+                about whether the attacker's exploit fully succeeds end-to-end.
+            </p>
+
+    <h2>Overall Takeaways</h2>
+    <ul>
+        <li>A sensor is only as good as its position in the network. Promiscuous mode, correct rules, and everything else is irrelevant if the traffic never 
+            physically reaches the interface.</li>
+        <li>Writing your own rules (like the SSH one) versus using community rules (like the distcc one) made the trade-off very tangible: my own rule was a 
+            simple content match, while the community rule was written by people who'd actually studied the distcc handshake protocol in detail. Both work, 
+            but community rules represent accumulated, specific knowledge that would take real research to replicate alone.</li>
+        <li>Exploits target specific software/OS combinations, not general "vulnerability" in the abstract. The EternalBlue attempt against a Linux target 
+            was a clear, low-stakes way to learn that.</li>
+        <li>IDS detects and logs; it doesn't block. Understanding that distinction clarified why the network needed to be inline even just for monitoring, 
+            not only for a hypothetical IPS setup.</li>
+    </ul>
 
       <div class="tag-row">
         <span class="tag">Snort</span>
