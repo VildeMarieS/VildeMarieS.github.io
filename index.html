@@ -91,76 +91,127 @@
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 
+const fontSize = 16;
+const columnSpacing = 26;
+const borderWidth = 320;
+
+let streams = [];
+
+const chars = [
+  "0","1","0","1","0","1",
+  "<",">","/","\\","{","}",
+  "#","$","_","*"
+];
+
+function createStream(x) {
+    return {
+        x,
+        y: -(Math.random() * window.innerHeight),
+        speed: 0.6 + Math.random() * 0.4, // pixels per frame
+        length: 8 + Math.floor(Math.random() * 12),
+        chars: Array.from(
+            { length: 20 },
+            () => chars[Math.floor(Math.random() * chars.length)]
+        )
+    };
+}
+
 function resize() {
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    columns = Math.floor(canvas.width / fontSize);
-    drops = [];
+    streams = [];
+
+    const columns = Math.floor(canvas.width / columnSpacing);
 
     for (let i = 0; i < columns; i++) {
-        drops[i] = Math.floor(Math.random() * -100);
+
+        const x = i * columnSpacing;
+
+        // Only create streams near the edges
+        if (x < borderWidth || x > canvas.width - borderWidth) {
+            streams.push(createStream(x));
+        }
     }
 }
-
-const fontSize = 16;
-let columns;
-let drops = [];
 
 resize();
 window.addEventListener("resize", resize);
 
-const chars = "01";
-
 function draw() {
 
     // Fade previous frame
-    ctx.fillStyle = "rgba(13,17,23,0.15)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(13,17,23,0.08)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    ctx.font = `${fontSize}px Space Mono`;
+    ctx.font = `${fontSize}px "Space Mono", monospace`;
+    ctx.textAlign = "center";
 
-    for (let i = 0; i < columns; i++) {
+    streams.forEach(stream => {
 
-        const borderColumns = 16;
+        stream.y += stream.speed;
 
-        if (
-          i > borderColumns &&
-          i < columns - borderColumns
-        )
-        continue;
+        // Occasionally change a character
+        if (Math.random() < 0.02) {
+            const index = Math.floor(Math.random()*stream.chars.length);
+            stream.chars[index] =
+                chars[Math.floor(Math.random()*2)];
+        }
 
-        const x = i * fontSize;
-        const y = drops[i] * fontSize;
+        for(let i = 0; i < stream.length; i++) {
 
-        // Head character (bright)
-        ctx.fillStyle = "#8dff9d";
-        ctx.fillText(
-            chars[Math.floor(Math.random() * 2)],
-            x,
-            y
-        );
+            const y = stream.y - i*fontSize;
 
-        // Trail (dimmer)
-        ctx.fillStyle = "rgba(63,185,80,0.30)";
+            if(y < -20 || y > canvas.height+20)
+                continue;
 
-        for (let t = 1; t <= 8; t++) {
+            // Fade toward the tail
+            let alpha = 1 - i/stream.length;
+
+            // Fade toward center of page
+            let edgeFade;
+
+            if(stream.x < borderWidth)
+                edgeFade = 1 - stream.x / borderWidth;
+            else
+                edgeFade = 1 - (canvas.width-stream.x)/borderWidth;
+
+            alpha *= edgeFade;
+
+            if(i === 0){
+
+                ctx.fillStyle = `rgba(220,255,220,${alpha})`;
+
+            }else{
+
+                ctx.fillStyle =
+                    `rgba(63,185,80,${alpha*0.65})`;
+
+            }
 
             ctx.fillText(
-                chars[Math.floor(Math.random() * 2)],
-                x,
-                y - t * fontSize
+                stream.chars[i % stream.chars.length],
+                stream.x,
+                y
             );
         }
 
-        // Slow movement
-        drops[i] += 0.08;
+        // Restart stream
+        if(stream.y - stream.length*fontSize >
+            canvas.height + Math.random()*200){
 
-        // Restart
-        if (y > canvas.height + Math.random() * 300) {
-            drops[i] = Math.floor(Math.random() * -40);
+            stream.y = -Math.random()*400;
+            stream.speed = 0.6 + Math.random()*0.4;
+            stream.length = 8 + Math.floor(Math.random()*12);
+
+            stream.chars = Array.from(
+                { length: 20 },
+                () => chars[Math.floor(Math.random()*2)]
+            );
         }
-    }
+
+    });
 
     requestAnimationFrame(draw);
 }
