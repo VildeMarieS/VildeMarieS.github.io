@@ -501,7 +501,13 @@ code {
   }
 
   .card-icon-img {
-  width: 2.5em;
-  height: 2.5em;
+  width: 2em;
+  height: 2em;
   object-fit: contain;
+}
+
+.card-icon-edited {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.5;
 }
