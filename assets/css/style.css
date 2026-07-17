@@ -499,3 +499,9 @@ code {
     font-size: 0.85rem;
     line-height: 1.6;
   }
+
+  .card-icon-img {
+  width: 1.5em;
+  height: 1.5em;
+  object-fit: contain;
+}
