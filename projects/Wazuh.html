@@ -46,7 +46,9 @@
         <div class="meta-item">
           <span class="label">Tool</span>
           <span class="value">Wazuh</span>
-          <span class="value">Linode</span>
+          <span class="value">Hydra (SSH brute-force)</span>
+          <span class="value">UFW (Firewall management)</span>
+          <span class="value">nwtplan/NetworkManager</span>
           <span class="value">VirtualBox</span>
         </div>
         <div class="meta-item">
@@ -59,31 +61,328 @@
       </div>
 
       <h1>Objective</h1>
-      
+      The goal of this project was to get hands-on with Wazuh as both an intrusion detection system (IDS) and an intrusion 
+      prevention system (IPS) — learning how it flags suspicious activity and how it can be configured to actively block it. 
+      Alongside this, I wanted to properly understand a two-adapter network setup: an internal network for lab-only traffic, 
+      and a NAT adapter for internet-facing communication back to the monitoring server.
 
       <h1>Environment</h1>
+
+      <img src="../assets/images/Wazuh/environment_Wazuh.png"
+            alt="Planned network diagram"
+            class="screenshot">
+
       <p>
         Three VirtualBox VMs:
         <ul>
-            <li> <b>Kali Linux</b> - attacker</li>
-            <li> <b>Ubuntu Server 20.04</b> - Snort IDS sensor</li>
-            <li> <b>Metasploitable2</b> - vulnerable target</li>
+            <li> <b>Wazuh Manager + Indexer + Dashboard</b>: Deployed as a single Linode Compute Instance via Linode's Marketplace app (4GB plan),
+            rather than run locally. This is a cloud-hosted service I connect my lab VMs to, not a VM I managedirectly through VirtualBox</li>
+            <li> <b>Ubuntu Desktop (Linux Server)</b>: fresh VirtualBox VM, running the Wazuh agent</li>
+            <li> <b>Windows 11 Workstation</b>: existing VM, running the Wazuh agent</li>
+            <li> <b>Kali Linux (Attacker)</b>: existing VM used to generate attack traffic. Deliberately left without an agent, since it's the source 
+                of the activity being detected, not being monitored </li>
         </ul>
       </p>
 
+      <p>
+        Each local VM runs two network adapters:
+        <ul>
+            <li><b>Adapter 1 - Internal Network</b>: a private segment shared only between the three VMs, used for attack traffic between Kali and the 
+            targets</li>
+            <li><b>Adapter 2 - NAT</b>: gives each VM outbound internet access, so agents can reach the Wazuh manager's public IP</li>
+        </ul>
+      </p>
       
+
+      <table>
+        <tr>
+          <th>VM</th>
+          <th>Internal IP</th>
+        </tr>
+        <tr>
+          <th>Ubuntu (Linux Server)</th>
+          <td>192.168.2.10</td>
+        </tr>
+        <tr>
+          <th>Windows Workstation</th>
+          <td>192.168.2.20</td>
+        </tr>
+        <tr>
+          <th>Kali (Attacker)</th>
+          <td>192.168.2.30</td>
+        </tr>
+      </table>
+
+    <h1>Method</h1>
+    <h2>Deploying the Wazuh server</h2>
+    <p>
+        I used Linode's Marketplace (now labeled "Quick Deploy Apps") to spin up a single instance running the Wazuh manager, 
+        indexer, and dashboard together. After the ~15-minute install finished, I grabbed the generated dashboard credentials 
+        via SSH and logged into the web UI to confirm everything was healthy before touching any local VMs.
+    </p>
+
+    <img src="../assets/images/Wazuh/Linode_setup.png"
+            alt="Linode setup"
+            class="screenshot">
+
+    <h2>Connecting the first Agent</h2>
+    <p>
+        With the manager confirmed working, I generated an agent install command from the dashboard's "Add agent" flow and 
+        ran it on my Ubuntu VM.
+    </p>
+
+    <img src="../assets/images/Wazuh/setting_up_agent_1.png"
+            alt="Trying to set up agent pic 1"
+            class="screenshot">
+    <img src="../assets/images/Wazuh/setting_up_agent_2.png"
+            alt="Trying to set up agent pic 2"
+            class="screenshot">
+
+    <p>
+        The agent installed and started, but didn't show as connected — checking the agent's own log (/var/ossec/logs/ossec.log) 
+        showed repeated <b>Unable to connect to enrollment service at [172.236.12.165]:1515</b> errors. SSHing into the Linode 
+        instance and checking sudo ufw status confirmed the cause: UFW only allowed ports 22, 80, and 443 by default — 1514 and 
+        1515 (the ports Wazuh agents use to enroll and communicate) weren't open at all.
+    </p>
+
+    <img src="../assets/images/Wazuh/fw_before.png"
+            alt="Default firewall settings"
+            class="screenshot">
+
+    <h4>Fix:</h4>
+    <pre><code>
+        sudo ufw allow 1514/tcp
+        sudo ufw allow 1515/tcp
+        sudo ufw reload
+    </code></pre>
+
+    <img src="../assets/images/Wazuh/fw_after.png"
+            alt="Edited firewall settings"
+            class="screenshot">
+
+    <p>First agent successfully connected to the manager:</p>
+    
+    <img src="../assets/images/Wazuh/first_conn_agent.png"
+            alt="First agent connected"
+            class="screenshot">
+
+    <p>
+        Once that was in place, the Ubuntu agent enrolled successfully. I repeated the same process for the Windows Workstation, 
+        which connected without issue since the firewall was already fixed.
+    </p>
+
+    <img src="../assets/images/Wazuh/sec_conn_agent.png"
+            alt="Second agent connected"
+            class="screenshot">
+
+    <h2>Fixing the internal network</h2>
+    <p>
+        Before running any attacks, I needed the internal network actually functioning end-to-end. I set static IPs on each VM's 
+        internal adapter (192.168.2.10/20/30) — on Ubuntu, I did this through the Settings GUI first, since I found it less 
+        error-prone than editing the netplan YAML directly by hand.
+    </p>
+    <p>
+        This didn't hold, though. The internal interface kept dropping out every ~45 seconds, and pings between Kali and Ubuntu 
+        worked intermittently before failing again. Digging into <code>journalctl -u NetworkManager</code> showed the actual cause: 
+        the netplan-generated connection profile (netplan-enp0s3) was still configured for DHCP underneath, regardless of what I'd 
+        set in the GUI. Every 45 seconds it tried to get a DHCP lease, found no DHCP server on that segment (there isn't meant to be one), 
+        gave up, and cycled again — which looked from the outside like the interface randomly disabling itself.
+    </p>
+    <p>
+        The real fix was editing the netplan config directly to disable DHCP and set the static address explicitly:
+    </p>
+    <pre>
+        <code>
+            network:
+              version: 2
+              renderer: NetworkManager
+              ethernets:
+                enp0s3:
+                  dhcp4: no
+                  addresses:
+                    - 192.168.2.10/24
+        </code>
+    </pre>
+
+    <p>
+        After <code>sudo netplan apply</code>, the address held steady, and I confirmed it stayed up over a few minutes rather than just checking 
+        once. Once the "cable connected" setting was also verified on both VMs' adapters, ping between Kali and Ubuntu worked reliably.
+    </p>
+
+    <h2>Performing the SSH brute-force attack</h2>
+    <p>
+        With the network stable, I enabled SSH on the Ubuntu VM (not on by default on Desktop editions) and confirmed port 22 was reachable from 
+        Kali using <code>nc -zv</code>. I built a small custom wordlist that intentionally included the real password, then ran:
+    </p>
+    <pre><code>hydra -l ubuntu -P /tmp/small-list.txt ssh://192.168.2.10</code></pre>
+
+    <img src="../assets/images/Wazuh/failed_first_attack.png"
+            alt="First attack"
+            class="screenshot">
+
+    <h2>Reviewing the detection</h2>
+    <p>
+        Wazuh's Threat Hunting page gave a clean overview of the resulting activity — total events, authentication failures, authentication successes, 
+        and a breakdown by severity level.
+    </p>
+
+    <img src="../assets/images/Wazuh/after_attack_dashboard.png"
+            alt="Dashboard after attack"
+            class="screenshot">
+
+    <p>
+        One alert stood out at severity level 12+, alongside two other notably high-scoring alerts: "<b>sshd brute force trying to get access to the system</b>" 
+        and "<b>Multiple authentication failures followed by a success.</b>" Both correctly captured exactly what I'd done — repeated failed logins followed by 
+        the one attempt that used the correct password.
+    </p>
+
+    <img src="../assets/images/Wazuh/after_attack_alerts.png"
+            alt="List of alerts after attack"
+            class="screenshot">
+
+    <p>
+        Clicking through to the associated MITRE ATT&CK technique gave additional context per alert: the broader attack category, what it typically leads to, 
+        likely threat actor motivations, and related techniques — genuinely useful input for thinking about this from a threat-modeling perspective rather than 
+        just "an alert fired."
+    </p>
+
+    <img src="../assets/images/Wazuh/after_attack_alert_details.png"
+            alt="details alert"
+            class="screenshot">
+
+    <h2>Unplanned bonus: real internet background noise</h2>
+    <p>
+        Since I'd left SSH open to "Anywhere" on the Linode server (needed for agent enrollment testing at the time), Wazuh also picked up a steady stream 
+        of real automated brute-force attempts from bots scanning the wider internet — source IPs from Hong Kong, the Netherlands, Nigeria, and elsewhere, 
+        none targeting me specifically, just routine scanning of any exposed port 22.
+    </p>
+
+    <img src="../assets/images/Wazuh/unknown_attacks_1.png"
+            alt="unknown brute force attack"
+            class="screenshot">
+    <img src="../assets/images/Wazuh/unknown_attacks_2.png"
+            alt="unknown brute force attack"
+            class="screenshot">
+    <img src="../assets/images/Wazuh/unknown_attacks_3.png"
+            alt="unknown brute force attack"
+            class="screenshot">
+
+    <p>
+        This gave me a good reason to actually apply the principle of least privilege to the firewall rather than just reading about it: I restricted SSH 
+        access on the Linode server to my own IP address only, leaving the dashboard (443) open more broadly since I need access to that from anywhere.
+    </p>
+
+    <pre>
+        <code>
+            sudo ufw delete allow 22/tcp
+            sudo ufw allow from &lt;my-ip&gt; to any port 22 proto tcp
+            sudo ufw reload
+        </code>
+    </pre>
+
+    <h2>Writing a prevention rule (IPS)</h2>
+    <p>
+        With detection confirmed, I moved on to the second half of the objective: actually blocking the attacker automatically rather than just logging 
+        the attempt. I added an active-response block to the manager's ossec.conf, tied to rule 40112, which is Wazuh's built-in rule for “multiple 
+        authentication failures followed by a success”, which is exactly the pattern my brute-force attack produces.
+    </p>
+
+    <pre>
+        <code>
+            &lt;active-response&gt;
+                &lt;command&gt;firewall-drop&lt;/command&gt;
+                &lt;location&gt;local&lt;/location&gt;
+                &lt;rules_id&gt;40112&lt;/rules_id&gt;
+                &lt;timeout&gt;1000&lt;/timeout&gt;
+            &lt;/active-response&gt;    
+        </code>
+    </pre>
+
+    <p>
+        My first attempt used &lt;location&gt;ubuntu-desktop&lt;/location&gt;, assuming this told Wazuh which agent to run the block on. It didn't fire 
+        at all… Checking the documantation clarified that &lt;location&gt; only accepts one of three fixed keywords (local, defined-agent, or all), not 
+        an arbitrary agent name. Since the alert originates on the same host as I want to block, local (meaning “run the response on whichever endpoint 
+        generatedd the alert) was the correct option.
+    </p>
+    <p>
+        After correcting this and restarting the manager, which is required for any ossec.conf change to take effect, I reran the brute-force attack 
+        from Kali.
+    </p>
+
+    <h3>Confirming the block</h3>
+    <p>
+        The active-reponse log on Ubuntu showed the full response lifecycle firing correctly this time: triggered by rule 40112, targeting Kali's IP 
+        (192.168.2.30), executing the block, and completing
+    </p>
+
+    <img src="../assets/images/Wazuh/success_block_1.png"
+            alt="successful block"
+            class="screenshot">
+    <p>
+        <code>iptables -L</code> confirmed the block was acctually in place, not just logged as attempt. Both the INPUT and FORWARD chains showed a new DROP rule 
+        specifically targeting 192.168.2.30
+    </p>
+
+    <img src="../assets/images/Wazuh/success_block_2.png"
+            alt="successful block"
+            class="screenshot">
+    <p>
+        To prove this had a real effect rather than just existing on paper, I tired pinging Ubuntu from Kali immediatley after. Every packet timed out
+         - Kali's own IP was now fully locked out of the internal network segment by the rule it had triggered.
+    </p>
+
+    <img src="../assets/images/Wazuh/success_block_3.png"
+            alt="successful block"
+            class="screenshot">
+    <p>
+        This closed the loop on the original objective: the same attack that Wazuh detected and alerted on earlier in the project was now being automatically 
+        detected and stopped, without any manual intervention once the rule was in place. 
+    </p>
+
+    <blockquote class="reflection">
+        <h3>Reflection: Things looking correct on the surface</h3>
+        <p>
+         Working through the internal network issue was a good reminder that a config looking correct in one place (the GUI) doesn't mean it's correct 
+         everywhere underneath. The DHCP retry loop was invisible until I actually read the NetworkManager journal — the symptom (intermittent connectivity) 
+         told me almost nothing about the cause on its own.
+        </p>
+    </blockquote>
+
+    <blockquote class="reflection">
+        <h3>Reflection: Differentiating targeted attacks from background noise</h3>
+        <p>
+         Seeing real, unsolicited attack traffic from around the world — alongside my own deliberately staged attack — was a useful contrast. It made the 
+         difference between "an alert fired" and "I am being targeted" much more concrete than it would have been from a textbook description alone. Both 
+         my sudo command and Windows' own background service logons also triggered detections, which was a good lesson in reading an alert's actual fields 
+         (user, process, logon type) rather than reacting to the label alone.
+        </p>
+    </blockquote>
+
+    <blockquote class="reflection">
+        <h3>Reflection: MITRE ATT&amp;CK</h3>
+        <p>
+         Wazuh's threat hunting view and MITRE ATT&amp;CK integration made it much easier to reason about why an alert mattered, not just that it fired — 
+         closing the loop between detection and the kind of threat modeling I'd otherwise only be doing on paper.
+        </p>
+    </blockquote>
 
     <h1>Overall Takeaways</h2>
     <ul>
-        <li></li>
-        <li></li>
-        <li></li>
+        <li><b>Cloud infrastructure isn't magic </b> : a Linode instance is just a Linux server with a public IP, and public IPs get scanned by bots within minutes 
+            regardless of what's running on them. Firewall hygiene (UFW, restricting SSH to a known IP) is a baseline requirement, not an optional extra.</li>
+        <li><b>NAT and Internal Network adapters serve very different purposes</b> : NAT gives outbound-only internet access, while Internal Network isolates lab traffic 
+            entirely from the outside world. Understanding this distinction was essential both for connecting agents to a remote manager and for keeping attack 
+            traffic contained to the lab.</li>
+        <li><b>Real-world noise is a feature, not a distraction</b> : the unsolicited SSH probing from bots around the world (while unrelated to the deliberate lab attack) 
+            was a useful, unplanned reminder of what "always-on" public infrastructure actually looks like from a threat perspective.</li>
         <li>.</li>
     </ul>
 
       <div class="tag-row">
-        <span class="tag"></span>
-        <span class="tag"></span>
+        <span class="tag">Wazuh</span>
+        <span class="tag">UFW</span>
+        <span class="tag">Hydra</span>
+        <span class="tag">netplan/NetworkManager</span>
         <span class="tag">Blue Team</span>
         <span class="tag">Kali Linux</span>
         <span class="tag">Ubuntu</span>
