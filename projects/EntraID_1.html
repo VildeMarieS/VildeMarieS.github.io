@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snort — Vilde-Marie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+
+
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">Vilde-Marie<span class="accent">.</span></a>
+      <nav>
+        <a href="../index.html#projects">Projects</a>
+        <a href="mailto:vildenia202@gmail.com">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <article>
+
+    <div class="project-hero">
+      <a href="../index.html" class="back-link">← All projects</a>
+      <span class="card-tag">Cybersecurity - Offensiv / Cloud Security</span>
+      <h1>Entra ID Attack Paths I: Enumeration & Privilege Escalation</h1>
+
+      <p class="lead">
+        n this project I built an isolated, deliberately vulnerable Entra ID tenant and attacked 
+        it the way a real adversary would after phishing an ordinary employee's password — starting 
+        with zero special access and using ROADtools, AzureHound, and BloodHound CE to enumerate the 
+        environment and map out what that low-privilege foothold could actually reach. Rather than a 
+        contrived textbook path, BloodHound surfaced a genuine, well-documented Entra ID misconfiguration: 
+        owning an app registration with the right Graph permission is enough to escalate to Global 
+        Administrator, no role of your own required.
+      </p>
+    </div>
+
+    <div class="project-body">
+
+      <div class="meta-row">
+        <div class="meta-item">
+          <span class="label">Type</span>
+          <span class="value">Lab / Cybersecurity - Offensive/Cloud Security</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Tool</span>
+          <span class="value">ROADtools</span>
+          <span class="value">AzureHound</span>
+          <span class="value">BloodHound CE</span>
+          <span class="value">Kali Linux</span>
+          <span class="value">Microsoft Entra ID</span>
+        </div>
+      </div>
+
+      <h1>Objective</h1>
+        <p>
+          Build a small, <b>deliberately vulnerable Entra ID tenant</b> and attack it using the same class of tools a real 
+          adversary would reach for after phishing a low-privilege employee: <b>ROADtools</b> for enumeration, <b>AzureHound</b> 
+          to pull directory data, and <b>BloodHound CE</b> to visualize what that low-privilege foothold can actually reach. 
+          The goal wasn't to start with admin rights and see what's possible — it was to start as an ordinary user 
+          and see how far that alone gets an attacker, mirroring the "assume breach" thinking that real cloud security 
+          teams operate under.
+        </p>
+      
+
+      <h1>Environment</h1>
+        <p>
+          Signing into Azure with my NTNU account would have put me inside NTNU's own production tenant, which means 122 777 
+          real users, tenant creation disabled for member accounts as a matter of sensible organization policy. So the first 
+          real decision of this project was building proper isolation: a seperate personal Microsoft account, fully disconnected fromm NTNU 
+          and personal use, with its own Azure Free Trail subscription auto-provisioning a dedicated tenant: <b>&lt;lab-tenant&gt;.onmicrosoft.com </b>
+        </p>
+
+      <blockquote class="reflection">
+        <h3>Reflection: Identity seperation isn't a nice-to-have</h3>
+          <p>
+            I went into this expecting the personal-account detour to be a minor setup annoyance. It turned out to be a direct, structural requirement 
+            the moment I hit NTNU's tenant restrictions — there was no way to build this lab safely inside my real identity even if I'd wanted to. It's 
+            a small but real parallel to how organizations separate test/sandbox environments from production: the separation isn't bureaucratic caution, 
+            it's what makes it safe to break things on purpose.
+          </p>
+      </blockquote>
+
+      <b>Three test users</b>, each built to represent a different role in the attack story:
+
+      <table>
+        <tr>
+          <th>User</th>
+          <th>Purpose</th>
+          <th>Notes</th>
+        </tr>
+        <tr>
+          <td>user1</td>
+          <td>Normal baseline employee</td>
+          <td>Standard password</td>
+        </tr>
+        <tr>
+          <td>Weak-password user</td>
+          <td>Attack target</td>
+          <td>Entra's built-in Password Protection blocket obvious weak patterns outright. "Summer2026!","Coffee2026!","Dragon2026!" 
+            and similar were all rejected. Landed on a misspelled-word + number pattern that passed the blocklist while staying 
+            realistically guessable.
+          </td>
+        </tr>
+        <tr>
+          <td>Over-privilegeduser</td>
+          <td>Simulated excessive/legacy privilege grants</td>
+          <td>Assigned Global Administrator at creation</td>
+        </tr>
+      </table>
+
+      <blockquote class="reflection">
+        <h3>Reflection: Blocklists catch words, not patterns</h3>
+          <p>
+            Entra's password blocklist reliably caught exact dictionary words but let through a deliberately misspelled variant of the 
+            same word plus a number; a small, concrete example of how blocklist-based defenses have real gaps against combinator-style
+             password guessing, even when they're doing their job as designed.
+          </p>
+      </blockquote>
+
+        <h2>Security Defaults over Conditional Access</h2>
+          <p>
+            The original plan was a Conditional Access policy restricting sign-in to my home IP. That requires Entra ID P1/P2 licensing, 
+            which isn't available on this tenant tier without a separate trial activation — and after hitting confusing redirects between 
+            the Azure, M365, and Power Platform admin portals trying to activate one, I made a deliberate call: rely on Security Defaults 
+            instead (free, on by default, enforces MFA and blocks a defined category of legacy authentication tenant-wide).
+          </p>
+
+        <blockquote class="reflection">
+        <h3>Reflection: Scoping hardening to what's actually available</h3>
+          <p>
+            The previous lab I conducted made me more aware of 'invisible' risks on the internet, such as bots performing port scanning on the internet
+            to gain access. So, when I set up this lab, I wanted to ensure that I did it with this risk in mind. However, I found that the realistic risk 
+            here (nobody knows this tenant exists) didn't justify burning hours untangling licencing portals for IP-restriction I didn't strictly need. 
+            I'd rather document a deliberate trade-off than pretend I built something more elaborate than I did. It's worth mentioning that the decision was 
+            made in the context of a private lab. Publishing this writeup changes the context, since the tenant's existence and this MFA gap stop being secret the moment this 
+            goes live. That's part of why the tenant itself gets shut down once this project is finished, rather than left running behind a redacted 
+            domain name indefinitely. This decision gets revisited directly in the second writeup, once Security Defaults turned out to have a gap I 
+            hadn't anticipated.
+          </p>
+      </blockquote>
+
+        <h2>Kali VM tooling</h2>
+        <p>The attacker-side tools used throughout this lab:</p>
+        <ul>
+            <li><b>ROADtools:</b> enumeration toolkit for Entra ID, used to authenticate as a tenant user and pull down directory data (users, roles, apps) into a local 
+            database</li>
+            <li><b>AzureHound:</b> collector that gathers Entra ID/Azure directory data into a format BloodHound can ingest</li>
+            <li><b>BloodHound Community Edition:</b> graph-based attack path visualization, used to map what a given identity can reach and surface privilege escalation chains</li>
+            <li><b>Docker:</b> used to run BloodHound CE's bundeled servies (Neo4j, PostgreSQL, API server)</li>
+        </ul>
+
+
+        <h1>Enumeration</h1>
+        Authenticated as the normal user (user1) rather than the over-privileged account deliberately. Using the admin account here would skip past the interesting part of the story: 
+        what an attacker can see with zero special access, straight after a plausible phishing compromise.
+        <pre>
+        <code>
+            roadrecon auth -u user1@&lt;lab-tenant&gt;.onmicrosoft.com -p 'their-password-here'
+            roadrecon gather
+        </code>    
+        </pre>
+
+        <img src="../assets/images/Entra/roadrecon_GUI_adminusers.png"
+            alt="overview of admin users"
+            class="screenshot">
+        
+        <p>
+            As a logged-in normal user with no elevated permissions, I was able to enumerate who holds the highest-privilege role in the entire tenant. This is a textbook 
+            real-world finding: attackers don't need admin rights to discover who the admins are, and that information alone is valuable for planning the next stage of an 
+            attack — "if I can compromise this specific person, I get full control."
+        </p>
+
+        <img src="../assets/images/Entra/roadrecon_GUI_users.png"
+            alt="overview of users"
+            class="screenshot">
+
+        <p>
+            All six accounts were "Cloud" source (cloud-native, not synced from on-prem AD) — worth noting since hybrid environments behave differently and weren't in scope 
+            here. No groups were configured in this tenant, so group-based escalation paths weren't part of this particular scenario.
+        </p>
+
+        <h1>Mapping the attack surface with BloodHound</h1>
+        <pre><code>
+            azurehound -u user1@&lt;lab-tenant&gt;.onmicrosoft.com -p 'their-password' --tenant &lt;lab-tenant&gt;.onmicrosoft.com list -o azurehound-output.json
+        </code></pre>
+
+        <img src="../assets/images/Entra/BloodHound_graph_OPuser_T0.png"
+            alt="BloodHound graph, over-privileged user flagged Tier Zero"
+            class="screenshot">
+
+        <p>
+            BloodHound automatically classified the over-privileged account as "Tier Zero" , which is its term for the most critical identities in an environment, without me telling 
+            it anything. It inferred that purely from the Global Administrator role assignment, exactly like a real attacker's tooling would flag the most valuable target automatically.
+        </p>
+        <p>
+            Direct pathfinding from the normal user to the over-privileged account returned no results. This was expected, given this tenant's flat structure with no groups or nested 
+            delegations. That's not a dead end so much as an honest result: BloodHound's real value comes from surfacing <i>indirect</i> paths, and a flat tenant simply doesn't have one to find yet.
+        </p>
+
+        <h2>Finding a real path: app registration ownership</h3>
+        <p>
+            I wanted to demonstrate a realistic escalation path rather than stop at the flat-structure dead end. The first candidate, privilege escalation via role-assignable group ownership, is a 
+            well-documented real Entra ID attack path (own a group with a directory role assigned to it, add yourself as a member, inherit the role). It didn't work here: assigning directory roles 
+            to groups requires a P1/P2 license, same wall as Conditional Access earlier.
+        </p>
+        <p>
+            The path that did work: in Entra ID, owning an <b>app registration</b> that's been granted <b>RoleManagement.ReadWrite.Directory</b> on Microsoft Graph is enough on its own. An owner can add a new 
+            client secret to that app themselves, authenticate as the app, and use its permission to assign any directory role (including Global Administrator) without ever holding a role personally.
+        </p>
+
+        <img src="../assets/images/Entra/granting_dangerous_permission.png"
+            alt="granting the dangerous permission + admin consent"
+            class="screenshot">
+
+        <img src="../assets/images/Entra/user1_owner_app.png"
+            alt="Setting user1 as owner of the app registration"
+            class="screenshot">
+
+        <p>
+            Re-running AzureHound and re-importing into BloodHound after granting user1 ownership surfaced the full chain automatically:
+        </p>
+
+        <img src="../assets/images/Entra/BloodHound_graph_longpath.png"
+            alt="BloodHound graph showing AZOwns -> AZRunsAs -> AZMGAddSecret path"
+            class="screenshot">
+
+        <p>
+            user1's ownership of the app registration (<b>AZOwns</b>) extends to its service principal (<b>AZRunsAs</b>), and that ownership grants the ability to add new credentials to it (<b>AZMGAddSecret</b>). 
+            Since the service principal holds <b>RoleManagement.ReadWrite.Directory</b>, adding a client secret and authenticating as the app would let an attacker assign themselves any directory role.
+        </p>
+
+        <blockquote class="reflection">
+        <h3>Reflection: Ownership is a takeover primitive</h3>
+          <p>
+            This demonstrates a genuinely well-documented real Entra ID misconfiguration class: ownership of an application is effectively equivalent to whatever permissions that application holds, 
+            whenever the app has high-privilege Graph permissions, because owners can always mint themselves new credentials for it. Unlike the manually-created over-privileged account (no path, 
+            flat structure), this one was automatically surfaced by BloodHound as a genuine attack chain starting from a completely unprivileged user. It's a good illustration of why "who owns what 
+            app" matters just as much as "who holds what role" in a real access review.
+          </p>
+      </blockquote>
+
+      <h3>What's still open</h3>
+      <p>
+        BloodHound mapped the full chain, but I haven't yet actually executed the last step — adding the client secret via Graph and using it to self-assign Global Administrator, to show the 
+        escalation complete end-to-end rather than just diagrammed. That's the natural, satisfying finish to this writeup and I'd like to come back and do it properly rather than leave it as 
+        "BloodHound says this would work."
+      </p>
+
+
+
+
+      <div class="tag-row">
+        <span class="tag">ROADtools</span>
+        <span class="tag">AzureHound</span>
+        <span class="tag">BloodHound Community Edition</span>
+        <span class="tag">Microsoft Entra ID</span>
+        <span class="tag">App registration privilege escalation</span>
+        <span class="tag">Service principal credential abuse</span>
+        <span class="tag">Cloud identity enumeration</span>
+        <span class="tag">Assume-breach methodology</span>
+      </div>
+
+    </div>
+
+  </article>
+
+  <footer class="site-footer">
+    <p>Vilde-Marie · Built with GitHub Pages</p>
+    <div class="footer-links">
+      <a href="https://github.com/VildeMarieS" target="_blank">GitHub</a>
+      <a href="mailto:vildenia202@gmail.com">Email</a>
+    </div>
+  </footer>
+
+    <script src="../assets/js/matrix-rain.js" defer></script>
+ 
+</body>
