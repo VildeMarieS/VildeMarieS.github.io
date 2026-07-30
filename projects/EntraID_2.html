@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snort — Vilde-Marie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+
+
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">Vilde-Marie<span class="accent">.</span></a>
+      <nav>
+        <a href="../index.html#projects">Projects</a>
+        <a href="mailto:vildenia202@gmail.com">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <article>
+
+    <div class="project-hero">
+      <a href="../index.html" class="back-link">← All projects</a>
+      <span class="card-tag">Cybersecurity - Offensiv / Cloud Security</span>
+      <h1>Entra ID Attack Paths I: Enumeration & Privilege Escalation</h1>
+
+      <p class="lead">
+        In this project I ran a password spray against a weak-password test account in the same lab tenant from Part I, 
+        expecting MFA to shut it down cleanly. Instead, a scripted login using a legacy OAuth flow slipped past Security 
+        Defaults entirely — the same mechanism behind an active, ongoing password spray campaign Huntress has been tracking 
+        since June 2026 (<a href="https://www.huntress.com/blog/lshiy-password-spray-attack" target="_blank">
+            Huntress Article</a>), which has compromised accounts across dozens of real organizations. I traced exactly why the free 
+        tier couldn't stop it, confirmed there was no free-tier mitigation available, and built Sentinel detection queries 
+        to catch the pattern instead.
+      </p>
+    </div>
+
+    <div class="project-body">
+
+        <div class="meta-row">
+        <div class="meta-item">
+          <span class="label">Type</span>
+          <span class="value">Lab / Cybersecurity - Offensive & Blue Team/Cloud Security</span>
+        </div>
+        <div class="meta-item">
+            <span class="label">Date</span>
+            <span class="value">July 2026</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Tool</span>
+          <span class="value">Python</span>
+          <span class="value">Microsoft Sentinel</span>
+          <span class="value">KQL</span>
+          <span class="value">Microsoft Entra ID</span>
+        </div>
+      </div>
+      
+      <p><i>Continuing directly from <a href="../projects/EntraID_1.html" target="_blank">Entra ID Attack Paths I</a>, same lab tenant. This
+         part covers a password spray attempt, an unexpected MFA bypass finding, and the detection queries built to catch it.</i></p>
+
+        <h1>Objective</h1>
+        <p>
+            Simulate the next realistic stage of the attack chain from Part I: gaining a foothold through a weak or guessable password, rather 
+            than the privilege-escalation path already mapped through app ownership. Then build detection for it in Microsoft Sentinel, closing 
+            the loop between attack and defense the way the Snort and Wazuh projects did.
+        </p>
+
+        <h1>Setting up the spray</h1>
+        <p>
+            Rather than a dedicated spray tool, I wrote a small Python script hitting Microsoft's OAuth token endpoint directly via the <b>Resource Owner Password 
+            Credentials (ROPC)</b> flow — the same flow <b>roadrecon</b> auth uses under the hood. The client authenticated as Azure CLI (04b07795-8ddb-461a-bbee-02f9e1bf7b46), 
+            a Microsoft first-party public client ID pre-provisioned in every tenant, so no app registration or admin consent was needed just to test this.
+        </p>
+
+        <img src="../assets/images/Entra/python_script.png"
+            alt="spray.py - Password list and attempt_login function"
+            class="screenshot">
+
+        <p>
+            The wordlist mixed a few realistic decoy passwords with the real test credential, 5 seconds apart, so the resulting sign-in logs would read 
+            like a genuine spray rather than a single lucky guess.
+        </p>
+
+        <h1>First run: a more interesting failure than just a failure</h1>
+        <img src="../assets/images/Entra/First_run.png"
+            alt="First run terminal output: 4 misses + AADSTS50055 expired-password result"
+            class="screenshot">
+        <p>
+            Four attempts returned <b>AADSTS50126 (invalid credentials)</b> — expected misses. The fifth returned <b>AADSTS50055: the password is expired</b>.
+        </p>
+        <p>
+            That reuslt is worth noting. It only appears <i>after</i> Entra validates the username and password as correct, meaning the account just needs a password change before 
+            completing sign-in. From an attacker's perspective, this isn't a failure at all. It confirms a working credential on the first real hit. A real attacker seeing this 
+            would go looking for another way to complete auth that doesn't hit the change-password prompt.
+        </p>
+
+        <h1>Secund run: trying for a success and hitting MFA</h1>
+        <p>I reset the test account's password and reran the script.</p>
+        <h4>Expected outcome:</h4>
+        <p>ROPC has no mechanism to prompt for a second factor, so against an MFA-registered account it should fail outright.</p>
+        
+        <h4>Actual outcome:</h4>
+        <img src="../assets/images/Entra/second_run_SUCCESS.png"
+            alt="Second run terminal output: SUCCESS"
+            class="screenshot">
+        <p>It succesed. Single factor, no MFA challange, clean token🤔</p>
+
+        <h2>Why? Doing some investigating🔎</h2>
+        <p>I checked the Security Defaults setting, expecting to find it disabled. It wasn't. Security Defaults were still on, meaning I had been successful in bypassing the security
+             settings, which at this point were the only security option available to me on the free tier.</p>
+        <img src="../assets/images/Entra/Security_Defaults.png"
+            alt="Entra Propertied page: 'Protected by security defaults'"
+            class="screenshot">
+
+        <p>Pulling the full sign-in log entry for the successful attempt:</p>
+
+        <img src="../assets/images/Entra/Basic_info_1.png"
+            alt="Basic info — Authentication requirement: Single-factor authentication, Status: Success"
+            class="screenshot">
+        <img src="../assets/images/Entra/Basic_info_2.png"
+            alt="Authentication Details — Client app: Mobile Apps and Desktop clients">
+        <img src="../assets/images/Entra/Basic_info_3.png"
+            alt="Authentication Details — Authentication Protocol: ROPC, Flagged for review: No, User agent: python-requests/2.32.5"
+            class="screenshot">
+
+        <p>Security Defaults' legacy authentication block is scoped to a specific category; protocols Entra classified as legacy/basic auth (IMAP, POP3, SMTP AUTH).
+            ROPC through a first-party public client ID gets classified as a "Mobile Apps and Desctop client", which is a modern auth category. So, it gets classified 
+            as safe and secure, althogh the grant type itself has zero capatability to issue an MFA challange. 
+        </p>
+        <p>
+            A scripted, single-factor, non-interactivve login using <b>python-requests</b> as its user agent succeeded against an MFA-enrolled account, wasn't blocked 
+            by Security Defaults, and wasn't flagged for review by Entra's own risk risk detection.
+        </p>
+
+        <p>
+            This isn't a theoretical gap, but — as of the writing of this in July 2026 — a <b>real vulnerability being exploited by attackers</b>. Between June 12-26, 2026 
+            (the month before this lab), Huntress observed a password spray campaign against Microsoft's Azure CLI, originating from an IPv6 range controlled by LSHIY LLC, 
+            that made over 81 million login attempts and compromised 78 Microsoft accounts across 64 organizations. It used exactly the mechanism I reproduced: Azure CLI 
+            ROPC sign-ins bypassing MFA that organizations believed was covering them.
+        </p>
+        <img src="../assets/images/Entra/chart1-daily-compromises.svg"
+            alt="Daily new compromises tied to LSHIY campaign, June 12-26 2026"
+            class="screenshot">
+
+        <p>
+            The specific <i>why</i> is worth quoting precisely rather than summarizing loosely, because it maps closely onto my own finding: of the 23 organizations hit in the 
+            campaign's biggest spike, 15 had MFA enforced via Conditional Access Policy — and it still didn't fire, for reasons including MFA being scoped to specific apps (e.g. 
+            "Microsoft Admin Portals" rather than "All Cloud Apps") rather than the client the attacker actually used, MFA being scoped to user groups that excluded the compromised 
+            accounts, MFA only triggering from untrusted locations (which the attacker's mislabeled IP address evaded), and in two cases MFA being left in report-only mode. Eight 
+            organizations had no MFA policy at all. My case is a variant of the same root problem: a control that's <i>enabled</i> but doesn't cover the specific client-app category 
+            the attacker's request falls into.
+        </p>
+
+        <img src="../assets/images/Entra/chart2-mfa-gap-breakdown.svg"
+            alt="Breakdown of the MFA gap"
+            class="screenshot">
+
+        <p>
+            After Huntress reported the abuse, LSHIY suspended the offending user's service on July 2, and attacks from that IP range stopped. Although, this only stopped the attackers 
+            temporarily. By Huntress's most recent public update at the time of writing (July 15, 2026), the same actors had moved infrastructure twice, first to FranTech, then to 3xK 
+            Tech GmbH, and pushed volume back up to roughly 1.5 million attempts/day, switching from IPv6 to IPv4 and spreading attempts thin accross approx. 12,800 IPs specifically to 
+            evade detection. Whether the campaign is still active by the time this is read is worth checking indepedently (although I assume not), but as of late July 2026, when I ran 
+            this lab, it was. 
+        </p>
+        <img src="../assets/images/Entra/chart3-asn-shift.svg"
+            alt="Chart showing the switch to a new IP range for the attacks"
+            class="screenshot">
+
+        <p>
+            Huntress's own mitigation guidance is worth citing directly as the "what would actually fix this" answer: require MFA (or block) unconditionally for All Users, All Cloud Apps,
+             and All Client App types, and specifically restrict the Azure CLI application for non-admin users. Both require Conditional Access — the same P1-licensed feature this lab's 
+             tenant doesn't have. <a href="https://www.huntress.com/blog/lshiy-password-spray-attack" target="blank">Read more of the mitigations on Huntress's site</a>
+        </p>
+
+        <details class="reflection-toggle">
+            <summary>💭 Discussion: what this actually means about "free" security</summary>
+                <div class="reflection-content">
+                    <p>My first instinct, before I'd read Huntress's data, was a fairly clean story: free tier gives you one blunt lever (Security Defaults), the surgical fix (Conditional Access) 
+                        sits behind a paywall, therefore you have to pay to be secure. Having actually looked at the numbers, that story is too clean, and I think the real picture is more interesting 
+                        than either "pay and you're safe" or "free and you're exposed."</p>
+                
+                    <p>Of the 23 organizations Huntress tracked in the campaign's biggest spike, 15 had MFA enforced via Conditional Access — the exact paid feature I'd pointed to as <em>the</em> fix. 
+                        It didn't matter. Scoping to the wrong apps, exclusions on the wrong groups, location conditions the attacker's IP evaded, policies left in report-only mode — paying for the 
+                        tool clearly isn't the same thing as being protected by it. Conditional Access is powerful, but it's also easy to misconfigure, and misconfiguration seems to have mattered more 
+                        in this dataset than licensing tier did. That undercuts my own "pay to be secure" framing pretty directly: most of the organizations that <em>did</em> pay still got hit.</p>
+                
+                    <p>But I don't think that makes the free tier blameless either. My tenant had exactly one lever — on or off, tenant-wide — and that lever turned out to have a documented, unpatchable 
+                        hole in it that no amount of tenant-side effort could close, since there wasn't even an object to disable. Paying wouldn't guarantee safety, but not paying guaranteed a specific 
+                        gap with no remedy at all.</p>
+                
+                    <p>What I keep coming back to is that this doesn't feel like it should be a purchasing decision in the first place. There's a real tradition in this field of treating baseline 
+                        protection as something that shouldn't be gated behind payment at all — the internet's early architects insisted TCP/IP and HTTP stay open, unencumbered protocols rather than 
+                        licensed technology, specifically so the network wouldn't be something only some people could afford to use safely. Phil Zimmermann released PGP for free in 1991 for essentially 
+                        the same reason: he thought strong encryption shouldn't be reserved for governments and corporations who could afford it, and he built and gave away a tool on that principle even 
+                        while it got him investigated for export violations. GPG carries the same ethos forward today.</p>
+                
+                    <p>Measured against that tradition, a documented, actively-exploited authentication bypass that the free tier simply cannot close — not "harder to close," but structurally <em>cannot</em>, 
+                        since there's no lever to pull — sits uncomfortably next to the idea that basic security should be a baseline, not a feature you unlock. And even the paid version isn't a clean counterexample, 
+                        since Huntress's own data shows that paying without configuring it correctly leaves you exactly where the free tier does. If anything, that's a sharper criticism than "pay to be secure": 
+                        it's closer to "you can pay and still not be secure, and if you don't pay, you're guaranteed not to be, on this specific vector" — which is a genuinely worse position than either extreme alone.</p>
+                </div>
+        </details>
+
+        <h1>Trying to find a free-tier fix anyway</h1>
+        <p>I wanted to know if there was any free-tier lever left, specifically if it was possible to disable the Azure CLI service principle itself. In my search this was the result:</p>
+        <img src="../assets/images/Entra/No_AzureCLI.png"
+            alt="Enterprise Applications search, Azure CLI filter cleared, no results"
+            class="screenshot">
+        <p>Searching Enterprise Applications for "Microsoft Azure CLI" (both clearing any filters, and searching by raw App ID) returned nothing. I cross-checked against roadrecon.db, and got the same empty result. </p>
+        <p>To rule out a portal quirk, I queried Microsoft Graph directly:</p>
+        <pre><code>GET https://graph.microsoft.com/v1.0/servicePrincipals?$filter=appId eq '04b07795-8ddb-461a-bbee-02f9e1bf7b46'</code></pre>
+        <img src="../assets/images/Entra/Zero_Value_Graph_explorer.png"
+            alt="Graph Explorer — 'value': [], no sample-account warning"
+            class="screenshot">
+        <p>
+            The result were <b>"value": []</b>, confirming a third way, straight from the API, that there is egnuinely <b>no Service Principal object for Azure CLI in this tenant</b>. This is despite it being the exact client 
+            in a completed successful sign-in. My working theory is that for this kind of first-party-client-to-first-party-resouce token exchange (Azure CLI against Microsoft Graph, both Microsoft-owned), the usual "create 
+             a Service Principal on first use" step doesn't fire the way it does for other apps. There is likely an implicit trust relationship between Microsoft's own client and Graph. 
+        </p>
+        <p>To summerize: <b>The free tier offers no object-level mitigation for this vector at all:</b></p>
+        <ul>
+            <li>Security Defaults doesn't classify it as legacy auth</li>
+            <li>Conditional Access requires a paid license</li>
+            <li>There's no local Service Principal to disable, since one was never created</li>
+        </ul>
+        <p>The mitigations documented for this pattern in the wild tend to live outside Entra's own toggles entirely: network-layer blocking of the token endpoint, or phishing-resistant auth that makes credential-only access moot 
+            regardless of protocol.</p>
+
+        <h1>Detection: writing the Sentinel/KQL queries</h1>
+        <p>
+            I set up the Microsoft Entra ID data connector to bring in both SigninLogs and AuditLogs, so I could see who's logging in and how, alongside what changes get made once they're in (password edits, user creation, role 
+            assignments, and the like).
+        </p>
+        <h3>Query 1: The spary pattern itself, from SigninLogs:</h3>
+        <pre><code>
+            SigninLogs
+            | where TimeGenerated &gt; ago(7d)
+            | summarize FailedAttempts = countif(ResultType != "0"),
+                        SuccessAttempts = countif(ResultType == "0"),
+                        Apps = make_set(AppDisplayName)
+                    by UserPrincipalName, bin(TimeGenerated, 15m)
+            | where FailedAttempts &gt;= 3 and SuccessAttempts &gt;= 1
+        </code></pre>
+
+        <p>This flags any user with several failures followed by a success in the same 15-minute window. This is the statistical shape of a spray, regardless of specific error codes.</p>
+        <img src="../assets/images/Entra/query1_weakuser.png"
+            alt="results — weakuser, 9 failed / 1 success"
+            class="screenshot">
+
+        <p>Caught the actual spray cleanly. It also caught something unexpected:</p>
+        <img src="../assets/images/Entra/query1_otherusers.png"
+            alt="over-privilegeduser and user1 rows"
+            class="screenshot">
+
+        <p>
+            Rows for over-privilegeduser (3 failed/1 success, via Graph Explorer) and user1 (earlier roadrecon auth sessions) — neither an attack. The Graph Explorer hits were me troubleshooting the MSA-vs-work-account sign-in 
+            issue while setting this whole detection step up. This is a useful finding in its own right: the query is statistically correct — several failures then a success genuinely is what a spray looks like, but it can't 
+            distinguish an attacker from an admin fumbling their own login. A real SOC needs human triage on alerts like this, or the false-positive rate on ordinary troubleshooting would be high.
+        </p>
+
+        <h3>Query 2: Post-compromise credential/role abuse, from AuditLogs:</h3>
+        <pre><code>
+            AuditLogs
+            | where TimeGenerated > ago(7d)
+            | where OperationName in ("Add service principal credentials", "Add app role assignment to service principal", "Add member to role")
+            | project TimeGenerated, OperationName, InitiatedBy, TargetResources, Category
+        </code></pre>
+
+        <img src="../assets/images/Entra/query2.png"
+            alt="results — two 'Add app role assignment' events"
+            class="screenshot">
+
+        <p>
+           Caught two events from the app-registration privilege escalation work in Part I. It correctly identifies that other attack path, just not anything chained directly after this session's spray, since the two attacks 
+           weren't run back-to-back. 
+        </p>
+
+        <p>
+            The natural next step joins these two — flag any account where a spray-shaped sign-in is followed by role/credential changes within an hour. I didn't actually write or run that join. Reasoning it through, it would've 
+            come back empty anyway, since the two attacks in this lab weren't chained back-to-back. And it also felt more complex than I could confidently explain if asked. So, I kept the two separate queries instead.
+        </p>
+        <p>
+            Still, it's worth building in a real SOC: correlated detections like this cut noise, and with analysts already managing a high alert volume, less noise means real signals are less likely to get buried. A good next step 
+            if I revisit this project.
+        </p>
+
+        <h1> MITRE ATT&CK mapping</h1>
+        <table>
+        <tr>
+          <th>Activity</th>
+          <th>Technique</th>
+        </tr>
+        <tr>
+          <td>Password spray attempts</td>
+          <td>T1110.003 — Brute Force: Password Spraying</td>
+        </tr>
+        <tr>
+          <td>Valid account access via ROPC, bypassing MFA</td>
+          <td>T1078 — Valid Accounts</td>
+        </tr>
+        <tr>
+          <td>Add credentials to service principal (Part I escalation)</td>
+          <td>T1098.001 — Account Manipulation: Additional Cloud Credentials</td>
+        </tr>
+      </table>
+
+
+      <div class="tag-row">
+        <span class="tag">Python</span>
+        <span class="tag">OAuth 2.0 / ROPC</span>
+        <span class="tag">Microsoft Sentinel</span>
+        <span class="tag">KQL</span>
+        <span class="tag">Microsoft Graph API</span>
+        <span class="tag">Security Defaults vs. Conditional Access</span>
+        <span class="tag">Detection false-positive analysis</span>
+        <span class="tag">MITRE ATT&CK mapping</span>
+        <span class="tag">Cloud identity licencing model</span>
+      </div>
+
+    </div>
+
+  </article>
+
+  <footer class="site-footer">
+    <p>Vilde-Marie · Built with GitHub Pages</p>
+    <div class="footer-links">
+      <a href="https://github.com/VildeMarieS" target="_blank">GitHub</a>
+      <a href="mailto:vildenia202@gmail.com">Email</a>
+    </div>
+  </footer>
+
+    <script src="../assets/js/matrix-rain.js" defer></script>
+ 
+</body>

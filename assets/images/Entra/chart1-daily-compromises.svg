@@ -1,0 +1,110 @@
+<svg viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg" font-family="'Space Grotesk', 'Space Mono', monospace">
+  <defs>
+    <linearGradient id="barGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#1f6b45"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+    <linearGradient id="surgeGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#c4b5fd"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="560" fill="#0d1b13"/>
+
+  <text x="40" y="50" fill="#eafbf1" font-size="26" font-weight="700">Daily New Compromises Tied to LSHIY Campaign</text>
+  <text x="40" y="78" fill="#7fd9a4" font-size="15">June 12–26, 2026 · Data source: Huntress</text>
+
+  <!-- gridlines, scale = 12px per unit, baseline y=480 -->
+  <g stroke="#1f3a2a" stroke-width="1">
+    <line x1="70" y1="480" x2="860" y2="480"/>
+    <line x1="70" y1="420" x2="860" y2="420"/>
+    <line x1="70" y1="360" x2="860" y2="360"/>
+    <line x1="70" y1="300" x2="860" y2="300"/>
+    <line x1="70" y1="240" x2="860" y2="240"/>
+    <line x1="70" y1="180" x2="860" y2="180"/>
+    <line x1="70" y1="120" x2="860" y2="120"/>
+  </g>
+  <g fill="#4d8067" font-size="12">
+    <text x="55" y="484" text-anchor="end">0</text>
+    <text x="55" y="424" text-anchor="end">5</text>
+    <text x="55" y="364" text-anchor="end">10</text>
+    <text x="55" y="304" text-anchor="end">15</text>
+    <text x="55" y="244" text-anchor="end">20</text>
+    <text x="55" y="184" text-anchor="end">25</text>
+    <text x="55" y="124" text-anchor="end">30</text>
+  </g>
+
+  <!-- bars: baseline y=480, scale 12px per unit -->
+  <!-- 6/12: 2 -->
+  <rect x="75" y="456" width="50" height="24" fill="url(#barGrad)" rx="3"/>
+  <text x="100" y="448" fill="#eafbf1" font-size="14" text-anchor="middle">2</text>
+  <text x="100" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/12</text>
+
+  <!-- 6/13: 4 -->
+  <rect x="135" y="432" width="50" height="48" fill="url(#barGrad)" rx="3"/>
+  <text x="160" y="424" fill="#eafbf1" font-size="14" text-anchor="middle">4</text>
+  <text x="160" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/13</text>
+
+  <!-- 6/14: 4 -->
+  <rect x="195" y="432" width="50" height="48" fill="url(#barGrad)" rx="3"/>
+  <text x="220" y="424" fill="#eafbf1" font-size="14" text-anchor="middle">4</text>
+  <text x="220" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/14</text>
+
+  <!-- 6/15: 4 -->
+  <rect x="255" y="432" width="50" height="48" fill="url(#barGrad)" rx="3"/>
+  <text x="280" y="424" fill="#eafbf1" font-size="14" text-anchor="middle">4</text>
+  <text x="280" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/15</text>
+
+  <!-- 6/16: 3 -->
+  <rect x="315" y="444" width="50" height="36" fill="url(#barGrad)" rx="3"/>
+  <text x="340" y="436" fill="#eafbf1" font-size="14" text-anchor="middle">3</text>
+  <text x="340" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/16</text>
+
+  <!-- 6/18: 7 -->
+  <rect x="375" y="396" width="50" height="84" fill="url(#barGrad)" rx="3"/>
+  <text x="400" y="388" fill="#eafbf1" font-size="14" text-anchor="middle">7</text>
+  <text x="400" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/18</text>
+
+  <!-- 6/19: 12 -->
+  <rect x="435" y="336" width="50" height="144" fill="url(#barGrad)" rx="3"/>
+  <text x="460" y="328" fill="#eafbf1" font-size="14" text-anchor="middle">12</text>
+  <text x="460" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/19</text>
+
+  <!-- 6/20: 3 -->
+  <rect x="495" y="444" width="50" height="36" fill="url(#barGrad)" rx="3"/>
+  <text x="520" y="436" fill="#eafbf1" font-size="14" text-anchor="middle">3</text>
+  <text x="520" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/20</text>
+
+  <!-- 6/21: 4 -->
+  <rect x="555" y="432" width="50" height="48" fill="url(#barGrad)" rx="3"/>
+  <text x="580" y="424" fill="#eafbf1" font-size="14" text-anchor="middle">4</text>
+  <text x="580" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/21</text>
+
+  <!-- 6/22: 30 SURGE -->
+  <rect x="615" y="120" width="50" height="360" fill="url(#surgeGrad)" rx="3" stroke="#e9d5ff" stroke-width="1.5"/>
+  <text x="640" y="112" fill="#f3e8ff" font-size="15" font-weight="700" text-anchor="middle">30</text>
+  <text x="640" y="502" fill="#e9d5ff" font-size="12" font-weight="700" text-anchor="middle">6/22</text>
+  <text x="750" y="140" fill="#e9d5ff" font-size="13" font-style="italic">← Surge Event</text>
+  <line x1="668" y1="135" x2="745" y2="135" stroke="#e9d5ff" stroke-width="1"/>
+
+  <!-- 6/23: 3 -->
+  <rect x="675" y="444" width="50" height="36" fill="url(#barGrad)" rx="3"/>
+  <text x="700" y="436" fill="#eafbf1" font-size="14" text-anchor="middle">3</text>
+  <text x="700" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/23</text>
+
+  <!-- 6/24: 1 -->
+  <rect x="735" y="468" width="50" height="12" fill="url(#barGrad)" rx="3"/>
+  <text x="760" y="460" fill="#eafbf1" font-size="14" text-anchor="middle">1</text>
+  <text x="760" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/24</text>
+
+  <!-- 6/26: 1 -->
+  <rect x="795" y="468" width="50" height="12" fill="url(#barGrad)" rx="3"/>
+  <text x="820" y="460" fill="#eafbf1" font-size="14" text-anchor="middle">1</text>
+  <text x="820" y="502" fill="#7fd9a4" font-size="12" text-anchor="middle">6/26</text>
+
+  <!-- axis -->
+  <line x1="70" y1="480" x2="860" y2="480" stroke="#4d8067" stroke-width="1.5"/>
+
+  <text x="40" y="540" fill="#4d8067" font-size="12" font-style="italic">Data recreated from Huntress's "No (Bad) CAP" LSHIY campaign report — huntress.com/blog/lshiy-password-spray-attack</text>
+</svg>

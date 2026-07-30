@@ -1,0 +1,73 @@
+<svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" font-family="'Space Grotesk', 'Space Mono', monospace">
+  <defs>
+    <linearGradient id="barGrad2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1f6b45"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="520" fill="#0d1b13"/>
+
+  <text x="40" y="50" fill="#eafbf1" font-size="26" font-weight="700">MFA Gap Breakdown for Impacted Organizations</text>
+  <text x="40" y="78" fill="#7fd9a4" font-size="15">23 impacted customers · Data source: Huntress</text>
+
+  <!-- gridlines vertical -->
+  <g stroke="#1f3a2a" stroke-width="1">
+    <line x1="340" y1="110" x2="340" y2="440"/>
+    <line x1="420" y1="110" x2="420" y2="440"/>
+    <line x1="500" y1="110" x2="500" y2="440"/>
+    <line x1="580" y1="110" x2="580" y2="440"/>
+    <line x1="660" y1="110" x2="660" y2="440"/>
+    <line x1="740" y1="110" x2="740" y2="440"/>
+    <line x1="820" y1="110" x2="820" y2="440"/>
+  </g>
+  <g fill="#4d8067" font-size="12" text-anchor="middle">
+    <text x="340" y="460">0</text>
+    <text x="420" y="460">1</text>
+    <text x="500" y="460">2</text>
+    <text x="580" y="460">3</text>
+    <text x="660" y="460">4</text>
+    <text x="740" y="460">5</text>
+    <text x="820" y="460">6</text>
+  </g>
+
+  <!-- bars: each row height 48, spacing 66, start y=120, baseline x=340, scale 80px/unit -->
+
+  <!-- No MFA policy at all: 8 (capped visually, extend past gridlines proportionally: 80*8=640 -> 340+640=980, out of frame; rescale so max value 8 fits: use 60px/unit instead -->
+  <!-- Recalculate scale: max value 8, available width 900-340-40=520 -> ~65px/unit -->
+
+  <!-- Row 1: No MFA policy at all - 8 -->
+  <rect x="340" y="120" width="520" height="40" fill="url(#barGrad2)" rx="4"/>
+  <text x="875" y="146" fill="#eafbf1" font-size="16" font-weight="700">8</text>
+  <text x="330" y="146" fill="#eafbf1" font-size="14" text-anchor="end">No MFA policy at all</text>
+
+  <!-- Row 2: MFA scoped to specific user groups/exclusions - 5 -->
+  <rect x="340" y="185" width="325" height="40" fill="url(#barGrad2)" rx="4"/>
+  <text x="680" y="211" fill="#eafbf1" font-size="16" font-weight="700">5</text>
+  <text x="330" y="205" fill="#eafbf1" font-size="14" text-anchor="end">MFA scoped to specific</text>
+  <text x="330" y="223" fill="#eafbf1" font-size="14" text-anchor="end">user groups / exclusions</text>
+
+  <!-- Row 3: MFA scoped to specific apps - 4 -->
+  <rect x="340" y="250" width="260" height="40" fill="url(#barGrad2)" rx="4"/>
+  <text x="615" y="276" fill="#eafbf1" font-size="16" font-weight="700">4</text>
+  <text x="330" y="270" fill="#eafbf1" font-size="14" text-anchor="end">MFA scoped to specific apps</text>
+  <text x="330" y="288" fill="#7fd9a4" font-size="12" text-anchor="end">(Admin Portals / VPN / per-SaaS)</text>
+
+  <!-- Row 4: MFA all-users but conditioned - 4 -->
+  <rect x="340" y="315" width="260" height="40" fill="url(#barGrad2)" rx="4"/>
+  <text x="615" y="341" fill="#eafbf1" font-size="16" font-weight="700">4</text>
+  <text x="330" y="335" fill="#eafbf1" font-size="14" text-anchor="end">MFA all-users but conditioned</text>
+  <text x="330" y="353" fill="#7fd9a4" font-size="12" text-anchor="end">(location / exclusions)</text>
+
+  <!-- Row 5: MFA in report-only - 2 -->
+  <rect x="340" y="380" width="130" height="40" fill="url(#barGrad2)" rx="4"/>
+  <text x="485" y="406" fill="#eafbf1" font-size="16" font-weight="700">2</text>
+  <text x="330" y="400" fill="#eafbf1" font-size="14" text-anchor="end">MFA in report-only</text>
+  <text x="330" y="418" fill="#7fd9a4" font-size="12" text-anchor="end">(never enforced)</text>
+
+  <!-- axis -->
+  <line x1="340" y1="440" x2="340" y2="110" stroke="#4d8067" stroke-width="1.5"/>
+  <line x1="340" y1="440" x2="860" y2="440" stroke="#4d8067" stroke-width="1.5"/>
+
+  <text x="40" y="500" fill="#4d8067" font-size="12" font-style="italic">Data recreated from Huntress's "No (Bad) CAP" LSHIY campaign report — huntress.com/blog/lshiy-password-spray-attack</text>
+</svg>

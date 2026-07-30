@@ -1,0 +1,106 @@
+<svg viewBox="0 0 950 560" xmlns="http://www.w3.org/2000/svg" font-family="'Space Grotesk', 'Space Mono', monospace">
+  <defs>
+    <linearGradient id="franGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#6d28d9"/>
+      <stop offset="100%" stop-color="#c4b5fd"/>
+    </linearGradient>
+    <linearGradient id="xkGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#1f6b45"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="950" height="560" fill="#0d1b13"/>
+
+  <text x="40" y="46" fill="#eafbf1" font-size="24" font-weight="700">Failed Login Attempts by ASN</text>
+  <text x="40" y="72" fill="#7fd9a4" font-size="14">July 1–16, 2026 · Data source: Huntress (approximate)</text>
+
+  <!-- legend -->
+  <rect x="700" y="30" width="14" height="14" fill="url(#franGrad)" rx="2"/>
+  <text x="720" y="42" fill="#eafbf1" font-size="13">FranTech Solutions</text>
+  <rect x="700" y="52" width="14" height="14" fill="url(#xkGrad)" rx="2"/>
+  <text x="720" y="64" fill="#eafbf1" font-size="13">3xK Tech GmbH</text>
+
+  <!-- gridlines, scale: baseline y=480, max ~1.7M, use 0.24px per unit (1000 units per pixel roughly) -->
+  <!-- scale factor: 1,700,000 units -> ~408px, so px per unit = 0.00024 -->
+  <g stroke="#1f3a2a" stroke-width="1">
+    <line x1="90" y1="480" x2="900" y2="480"/>
+    <line x1="90" y1="380" x2="900" y2="380"/>
+    <line x1="90" y1="280" x2="900" y2="280"/>
+    <line x1="90" y1="180" x2="900" y2="180"/>
+    <line x1="90" y1="100" x2="900" y2="100"/>
+  </g>
+  <g fill="#4d8067" font-size="11">
+    <text x="80" y="484" text-anchor="end">0</text>
+    <text x="80" y="384" text-anchor="end">500k</text>
+    <text x="80" y="284" text-anchor="end">1M</text>
+    <text x="80" y="184" text-anchor="end">1.5M</text>
+    <text x="80" y="104" text-anchor="end">2M</text>
+  </g>
+
+  <!-- scale: 1,000,000 units = 200px -> 0.0002 px/unit -->
+  <!-- baseline y=480 -->
+
+  <!-- Day columns, each 52px wide, two bars per day (FranTech + 3xK), starting x=95 -->
+
+  <!-- 1st: Fran 180k, 3xK 0 -->
+  <rect x="95" y="444" width="20" height="36" fill="url(#franGrad)" rx="2"/>
+  <!-- 2nd: Fran 120k -->
+  <rect x="147" y="456" width="20" height="24" fill="url(#franGrad)" rx="2"/>
+  <!-- 3rd: Fran 70k -->
+  <rect x="199" y="466" width="20" height="14" fill="url(#franGrad)" rx="2"/>
+  <!-- 4th: Fran 150k -->
+  <rect x="251" y="450" width="20" height="30" fill="url(#franGrad)" rx="2"/>
+  <!-- 5th: Fran 130k -->
+  <rect x="303" y="454" width="20" height="26" fill="url(#franGrad)" rx="2"/>
+  <!-- 6th: Fran 40k, 3xK 430k -->
+  <rect x="355" y="472" width="20" height="8" fill="url(#franGrad)" rx="2"/>
+  <rect x="377" y="394" width="20" height="86" fill="url(#xkGrad)" rx="2"/>
+  <!-- 7th: Fran 180k, 3xK 750k -->
+  <rect x="407" y="444" width="20" height="36" fill="url(#franGrad)" rx="2"/>
+  <rect x="429" y="330" width="20" height="150" fill="url(#xkGrad)" rx="2"/>
+  <!-- 8th: Fran 250k, 3xK 1,380k -->
+  <rect x="459" y="430" width="20" height="50" fill="url(#franGrad)" rx="2"/>
+  <rect x="481" y="204" width="20" height="276" fill="url(#xkGrad)" rx="2"/>
+  <!-- 9th: Fran 180k, 3xK 1,320k -->
+  <rect x="511" y="444" width="20" height="36" fill="url(#franGrad)" rx="2"/>
+  <rect x="533" y="216" width="20" height="264" fill="url(#xkGrad)" rx="2"/>
+  <!-- 10th: Fran 150k, 3xK 1,680k -->
+  <rect x="563" y="450" width="20" height="30" fill="url(#franGrad)" rx="2"/>
+  <rect x="585" y="144" width="20" height="336" fill="url(#xkGrad)" rx="2"/>
+  <!-- 11th: 3xK 1,520k -->
+  <rect x="637" y="176" width="20" height="304" fill="url(#xkGrad)" rx="2"/>
+  <!-- 12th: 3xK 1,530k -->
+  <rect x="689" y="174" width="20" height="306" fill="url(#xkGrad)" rx="2"/>
+  <!-- 13th: 3xK 1,550k -->
+  <rect x="741" y="170" width="20" height="310" fill="url(#xkGrad)" rx="2"/>
+  <!-- 14th: 3xK 1,400k -->
+  <rect x="793" y="200" width="20" height="280" fill="url(#xkGrad)" rx="2"/>
+  <!-- 15th: 3xK 1,350k -->
+  <rect x="845" y="210" width="20" height="270" fill="url(#xkGrad)" rx="2"/>
+
+  <!-- day labels -->
+  <g fill="#7fd9a4" font-size="11" text-anchor="middle">
+    <text x="115" y="500">1st</text>
+    <text x="167" y="500">2nd</text>
+    <text x="219" y="500">3rd</text>
+    <text x="271" y="500">4th</text>
+    <text x="323" y="500">5th</text>
+    <text x="375" y="500">6th</text>
+    <text x="427" y="500">7th</text>
+    <text x="479" y="500">8th</text>
+    <text x="531" y="500">9th</text>
+    <text x="583" y="500">10th</text>
+    <text x="647" y="500">11th</text>
+    <text x="699" y="500">12th</text>
+    <text x="751" y="500">13th</text>
+    <text x="803" y="500">14th</text>
+    <text x="855" y="500">15th</text>
+  </g>
+  <text x="475" y="524" fill="#7fd9a4" font-size="13" text-anchor="middle">July 2026</text>
+
+  <!-- axis -->
+  <line x1="90" y1="480" x2="900" y2="480" stroke="#4d8067" stroke-width="1.5"/>
+
+  <text x="40" y="548" fill="#4d8067" font-size="12" font-style="italic">Values approximated from Huntress's "No (Bad) CAP" LSHIY campaign report — huntress.com/blog/lshiy-password-spray-attack</text>
+</svg>
