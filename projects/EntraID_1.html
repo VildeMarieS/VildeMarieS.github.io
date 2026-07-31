@@ -247,14 +247,91 @@
           </p>
       </blockquote>
 
-      <h3>What's still open</h3>
-      <p>
-        BloodHound mapped the full chain, but I haven't yet actually executed the last step — adding the client secret via Graph and using it to self-assign Global Administrator, to show the 
-        escalation complete end-to-end rather than just diagrammed. That's the natural, satisfying finish to this writeup and I'd like to come back and do it properly rather than leave it as 
-        "BloodHound says this would work."
-      </p>
+      <h1>Closing the loop: executing the escalation</h1>
+        <p>
+            BloodHound mapped the full chain, but a diagram alone doesn't prove the vulnerability is exploitable. I wanted to demonstrate an actual breach rather than a theoretical one, so I went back 
+            and carried out the escalation end-to-end.
+        </p>
+        <p>
+            I started by generating a new client secret for the app registration. Secret values are only ever shown once, right at creation, so if you want to use one and haven't saved it somewhere 
+            safe, the only option is to create a new one.
+        </p>
+        <p>
+            Then I authenticated as the application itself, using the client credentials OAuth flow rather than a user flow. This means it's the app's own identity, not user1's, requesting the token:
+        </p>
 
+        <pre><code>
+            curl -X POST https://login.microsoftonline.com/&lt;lab-tenant&gt;.onmicrosoft.com/oauth2/v2.0/token \
+            -d "grant_type=client_credentials" \
+            -d "client_id=&lt;app-client-id&gt;" \
+            -d "client_secret=&lt;secret-value&gt;" \
+            -d "scope=https://graph.microsoft.com/.default"
+        </code></pre>
 
+        <img src="../assets/images/Entra/access_token_obtained.png"
+            alt="token response — token_type/expires_in visible, access_token value redacted"
+            class="screenshot">
+        
+        <p>
+            A successful response returns an access token carrying whatever Graph permissions the app itself holds, including <b>RoleManagement.ReadWrite.Directory</b>.
+        </p>
+        <p>
+            Then I used that token to self-assign Global Administrator to user1, via Microsoft Graph's role assignment endpoint, targeting Global Administrator's fixed, 
+            well-known role template ID:
+        </p>
+        <pre><code>
+            curl -X POST https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments \
+            -H "Authorization: Bearer &lt;access_token&gt;" \
+            -H "Content-Type: application/json" \
+            -d '{
+                "principalId": "&lt;user1-object-id&gt;",
+                "roleDefinitionId": "62e90394-69f5-4237-9190-012177145e10",
+                "directoryScopeId": "/"
+            }'
+        </code></pre>
+        <img src="../assets/images/Entra/role_assigned_API.png"
+            alt="role assignment response — tenant ID and principal ID redacted, roleDefinitionId visible confirming Global Administrator"
+            class="screenshot">
+
+        <p>
+            The response confirmed a new role assignment was created, scoped tenant-wide (directoryScopeId: "/"), matching Global Administrator's role definition ID 
+            exactly.
+        </p>
+        <p>Finally, I verified this in the portal too, independent of trusting the API response alone:</p>
+
+        <img src="../assets/images/Entra/Confirmation_role_assigned.png"
+            alt="Global Administrator — Assignments, showing User 1 now listed alongside Over-privileged User and Vm Sec"
+            class="screenshot">
+
+        <p>
+            User1, the account that started this entire writeup with zero special permissions, now sits in the Global Administrator assignments list. The escalation 
+            BloodHound surfaced automatically from app ownership alone was real, not theoretical: zero privilege to tenant-wide admin, in three API calls, using 
+            nothing but ownership of an over-permissioned app registration.
+        </p>
+
+         <h1> MITRE ATT&CK mapping</h1>
+        <table>
+        <tr>
+          <th>Activity</th>
+          <th>Technique</th>
+        </tr>
+        <tr>
+          <td>Enumerating users/roles as a low-privilege user</td>
+          <td>T1087.004 — Account Discovery: Cloud Account</td>
+        </tr>
+        <tr>
+          <td>Mapping privilege escalation paths via BloodHound</td>
+          <td>T1069.003 — Permission Groups Discovery: Cloud Groups</td>
+        </tr>
+        <tr>
+          <td>Adding credentials to an owned service principal</td>
+          <td>T1098.001 — Account Manipulation: Additional Cloud Credentials</td>
+        </tr>
+        <tr>
+          <td>Self-assigning Global Administrator via Graph</td>
+          <td>T1078.004 — Valid Accounts: Cloud Accounts</td>
+        </tr>
+      </table>
 
 
       <div class="tag-row">
