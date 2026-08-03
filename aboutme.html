@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About Me — scrapbook demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+
+  /* ---------- 1. base setup ---------- */
+
+  :root{
+    --accent: #4c8c5f;        /* your leafy green */
+    --accent-dim: #1e3a28;    /* deep green tint */
+    --paper: #fdfcf9;
+    --ink: #2b2b2b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+  }
+
+  .page{
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 60px 24px 120px;
+  }
+
+  h1{
+    font-family: 'Inter', sans-serif;
+    color: var(--accent-dim);
+    font-size: 2.2rem;
+    margin-bottom: .2em;
+  }
+
+  .kicker{
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: .8rem;
+    margin-bottom: 1.6em;
+  }
+
+  p{ margin: 0 0 1.2em; }
+
+  /* ---------- 2. the polaroid itself ---------- */
+
+  /*
+    The "frame" is just a white box with uneven padding:
+    thin on the sides/top, thick on the bottom, like a real
+    Polaroid print. The shadow + slight rotation is what sells
+    the "tossed onto a desk" feeling instead of a stiff grid.
+  */
+
+  .polaroid{
+    background: #fff;
+    padding: 10px 10px 36px;
+    box-shadow: 0 6px 16px rgba(0,0,0,.18), 0 2px 4px rgba(0,0,0,.08);
+    width: 230px;
+    position: relative;
+    margin: 8px 0 24px;
+  }
+
+  .polaroid img{
+    display: block;
+    width: 100%;
+    height: 260px;
+    object-fit: cover;   /* crops to fill the frame instead of squishing */
+  }
+
+  .polaroid figcaption{
+    font-family: 'Caveat', cursive;
+    font-size: 1.3rem;
+    text-align: center;
+    color: #333;
+    margin-top: 6px;
+  }
+
+  /*
+    A little washi-tape rectangle, purely decorative.
+    ::before lets us add it without extra HTML markup.
+  */
+  .polaroid.taped::before{
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    width: 70px;
+    height: 24px;
+    background: rgba(76,140,95,.35);   /* translucent accent green "tape" */
+    transform: translateX(-50%) rotate(-3deg);
+    box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  }
+
+  /* ---------- 3. scattering left / right ---------- */
+
+  /*
+    This is the actual "scrapbook" trick: float the polaroid
+    to one side, give it a chunk of margin on the opposite side
+    so text doesn't crowd it, and rotate it a few degrees so it
+    doesn't look like a rigid grid. Alternate float-left/float-right
+    as you go down the page so images scatter across both sides.
+  */
+
+  .float-left{
+    float: left;
+    margin-right: 28px;
+    transform: rotate(-5deg);
+  }
+
+  .float-right{
+    float: right;
+    margin-left: 28px;
+    transform: rotate(4deg);
+  }
+
+  /* small variation so not everything sits at the same angle */
+  .rotate-alt{ transform: rotate(-3deg); }
+
+  /* clears the floats before a full-width element, e.g. a new heading */
+  .clear{ clear: both; }
+
+  /* ---------- 4. small screens: stop floating, stack instead ---------- */
+
+  @media (max-width: 640px){
+    .polaroid{
+      float: none !important;
+      margin: 0 auto 28px;
+      transform: none !important;
+    }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="kicker">About</div>
+  <h1>Vilde-Marie Spilde</h1>
+
+  <!-- ===================== SCRAPBOOK CONTENT STARTS ===================== -->
+
+  <figure class="polaroid float-left taped">
+    <img src="assets/biathlon.jpg" alt="Vilde-Marie at a biathlon World Cup event in Norway">
+    <figcaption>cheering, Norway</figcaption>
+  </figure>
+
+  <p>I read mysteries the way other people read gossip magazines: obsessively, mostly for the reveal. There's something deeply satisfying about being handed a pile of scattered clues and having to work out how they fit together. Turns out that's a pretty accurate description of why I love cybersecurity too. Whether it's tracing a privilege-escalation path through Entra ID or figuring out what a suspicious DLL is actually trying to do, it's the same instinct: collect the pieces, find the pattern, solve the puzzle.</p>
+
+  <p>I didn't start out here, though. I spent two years of a three-year Bachelor's in electrical engineering before admitting to myself that the spark just wasn't there. Everyone around me seemed genuinely fired up about the material, and I kept waiting to feel the same way; it never really came. Switching felt risky at the time (I'd already put in two years, after all), but staying somewhere comfortable just because I'd already invested in it felt like the worse trade.</p>
+
+  <figure class="polaroid float-right taped rotate-alt">
+    <img src="assets/cardigan.jpg" alt="A pastel granny-stripe crochet cardigan Vilde-Marie made">
+    <figcaption>current project</figcaption>
+  </figure>
+
+  <p>I originally applied for computer science, mostly because I understood what that degree actually involved and "communication technology" sounded vague to me. I put it down as my backup, almost as an afterthought. I got into the backup instead, and it turned out to be exactly where I needed to land. The more I've learned since (cryptography, blue team, red team, all of it), the more convinced I am that I found my thing.</p>
+
+  <p>Outside of security, I crochet. I've been at it for four to five years now, mostly baby garments and small projects, and I've gotten genuinely good at it.</p>
+
+  <figure class="polaroid float-left taped">
+    <img src="assets/pinafore2.jpg" alt="A sage green crochet pinafore dress Vilde-Marie made">
+    <figcaption>sage pinafore, 2026</figcaption>
+  </figure>
+
+  <p>I also climb (bouldering, three to four years in), and I travel as much as I can, mostly for the food: trying whatever's local wherever I end up, then coming home to experiment with recreating it in my own kitchen. That's actually part of why I worked as a cook for a couple of years. I just like being around food.</p>
+
+  <figure class="polaroid float-right taped rotate-alt">
+    <img src="assets/cats2.jpg" alt="Vilde-Marie's two cats">
+    <figcaption>the coworkers</figcaption>
+  </figure>
+
+  <p>Right now I'm a cybersecurity master's student at NTNU, about to spend an exchange year at EURECOM in France, and always looking for the next thing to break, fix, or figure out.</p>
+
+  <div class="clear"></div>
+
+  <!-- ===================== SCRAPBOOK CONTENT ENDS ===================== -->
+
+</div>
+
+</body>
+</html>
