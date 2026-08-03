@@ -675,3 +675,110 @@ code {
     transform: none !important;
   }
 }
+
+
+.photo-line-wrap {
+  max-width: 720px;
+  margin: 4rem auto 2rem;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 1;
+}
+ 
+.photo-line-heading {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+ 
+.photo-line {
+  position: relative;
+  padding-top: 30px;
+}
+ 
+/* the "string" itself, fading out at both ends */
+.photo-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--muted) 12%, var(--muted) 88%, transparent);
+}
+ 
+.photo-line-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 36px 22px;
+}
+ 
+.hanging-photo {
+  width: 130px;
+  position: relative;
+  margin-top: -2px; /* pulls the clip up so it overlaps the string */
+}
+ 
+/* the little clothespin pinning the photo to the string */
+.hanging-photo .clip {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 15px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 3px 3px 6px 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .45);
+  z-index: 2;
+}
+ 
+.hanging-photo .clip::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  background: rgba(0, 0, 0, .3);
+}
+ 
+.hanging-photo .polaroid-mini {
+  background: #f4f2ec;
+  padding: 6px 6px 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .45);
+}
+ 
+.hanging-photo .polaroid-mini img {
+  display: block;
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  filter: saturate(0.92);
+}
+ 
+.hanging-photo figcaption {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: #333;
+  margin-top: 5px;
+  text-transform: lowercase;
+}
+ 
+/* alternating tilt so the row doesn't look like a rigid grid */
+.hanging-photo:nth-child(odd)  { transform: rotate(-4deg); }
+.hanging-photo:nth-child(even) { transform: rotate(3deg); }
+.hanging-photo:nth-child(3n)   { transform: rotate(-2deg); }
+ 
+@media (max-width: 640px) {
+  .hanging-photo { width: 105px; }
+  .hanging-photo .polaroid-mini img { height: 105px; }
+}
